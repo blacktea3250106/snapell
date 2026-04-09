@@ -1,0 +1,64 @@
+name: voxcards
+description: "VoxCards — 拍照 + 咒語 = 獨一無二的戰鬥卡"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # UI & Animation
+  flutter_animate: ^4.5.0
+  cached_network_image: ^3.4.1
+
+  # Camera & Audio (Phase 1 - summon flow)
+  camera: ^0.11.0+2
+  image_picker: ^1.1.2
+  # record: ^5.2.1  # TODO: re-add when needed for voice recording
+  audioplayers: ^6.1.0
+
+  # Utilities
+  uuid: ^4.5.1
+  intl: ^0.19.0
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Firebase (uncomment when Firebase project is ready)
+  # firebase_core: ^3.6.0
+  # firebase_auth: ^5.3.1
+  # cloud_firestore: ^5.4.4
+  # firebase_storage: ^12.3.2
+  # cloud_functions: ^5.1.3
+  # firebase_messaging: ^15.1.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  riverpod_generator: ^2.6.2
+  build_runner: ^2.4.13
+  custom_lint: ^0.7.0
+  riverpod_lint: ^2.6.2
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Rajdhani
+      fonts:
+        - asset: fonts/Rajdhani-Bold.ttf
+          weight: 700
+    - family: BarlowCondensed
+      fonts:
+        - asset: fonts/BarlowCondensed-SemiBold.ttf
+          weight: 600
+    - family: NotoSansTC
+      fonts:
+        - asset: fonts/NotoSansTC.ttf
