@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoxCards — 🟡 傳說：黃金聖光卡</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #E8E0D0;
+    font-family: 'Noto Sans TC', sans-serif;
+    gap: 24px; padding: 40px 20px;
+  }
+  h1 { font-size: 18px; color: #D97706; font-weight: 400; letter-spacing: 2px; }
+  h1 span { font-weight: 700; color: #F59E0B; }
+
+  .card-outer {
+    position: relative;
+    width: 316px; height: 416px;
+  }
+  /* 金色外光 */
+  .card-outer::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 18px;
+    background: conic-gradient(from var(--angle, 0deg),
+      #F59E0B, #FBBF24, #D97706, #92400E, #F59E0B
+    );
+    filter: blur(14px);
+    opacity: 0.35;
+    animation: rotateGold 2s linear infinite;
+  }
+  @keyframes rotateGold {
+    to { --angle: 360deg; }
+  }
+  @property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  .card {
+    position: relative;
+    width: 300px; height: 400px;
+    /* v4: 暖白→淡金漸層（不是全金底）*/
+    background: linear-gradient(160deg, #FFFCF5 0%, #FEF3C7 100%);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    z-index: 1;
+  }
+
+  /* 三層金色邊框 */
+  .card::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 10px;
+    padding: 3px;
+    background: conic-gradient(from var(--angle, 0deg),
+      #F59E0B, #FBBF24, #D97706, #92400E, #F59E0B
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 10;
+    pointer-events: none;
+    animation: rotateGold 2s linear infinite;
+  }
+  /* 暗金凹槽 */
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 7px;
+    border: 0.5px solid #92400E;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .inner-line {
+    position: absolute;
+    inset: 7px;
+    border-radius: 5px;
+    border: 0.5px solid #FDE68A;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* 金色粒子 */
+  .particles {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    background: #F59E0B;
+    animation: riseParticle var(--dur) linear infinite;
+    opacity: 0;
+  }
+  .particle.white { background: #FFFFFF; }
+  @keyframes riseParticle {
+    0% { transform: translateY(0); opacity: 0; }
+    10% { opacity: var(--max-op, 0.8); }
+    80% { opacity: var(--max-op, 0.8); }
+    90% { opacity: 0; }
+    100% { transform: translateY(-380px); opacity: 0; }
+  }
+
+  /* 邊框旋轉光點 */
+  .orbit-dot {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #FDE68A;
+    box-shadow: 0 0 6px #F59E0B, 0 0 12px #F59E0B80;
+    z-index: 11;
+    animation: orbitMove 8s linear infinite;
+  }
+  @keyframes orbitMove {
+    0% { top: 0; left: 0; }
+    25% { top: 0; left: 296px; }
+    50% { top: 396px; left: 296px; }
+    75% { top: 396px; left: 0; }
+    100% { top: 0; left: 0; }
+  }
+  .orbit-dot:nth-child(2) { animation-delay: -2s; }
+  .orbit-dot:nth-child(3) { animation-delay: -4s; }
+  .orbit-dot:nth-child(4) { animation-delay: -6s; }
+
+  /* 全息效果 */
+  .holo-overlay {
+    position: absolute; inset: 0;
+    z-index: 6; pointer-events: none;
+    background: linear-gradient(
+      var(--holo-angle, 135deg),
+      rgba(255,215,0,0.06) 0%,
+      rgba(255,255,255,0.04) 30%,
+      rgba(255,183,77,0.06) 60%,
+      rgba(255,215,0,0.04) 100%
+    );
+    animation: holoShift 3s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+  }
+  @keyframes holoShift {
+    0% { --holo-angle: 115deg; opacity: 0.5; }
+    100% { --holo-angle: 155deg; opacity: 1; }
+  }
+  @property --holo-angle {
+    syntax: '<angle>';
+    initial-value: 135deg;
+    inherits: false;
+  }
+
+  /* 照片區 */
+  .photo-area {
+    width: 270px; height: 240px;
+    margin: 15px auto 0;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .photo-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #FEF3C7 0%, #FCD34D 40%, #F59E0B 100%);
+    display: flex; align-items: center; justify-content: center;
+    filter: brightness(1.08) contrast(1.25) saturate(1.18);
+  }
+  /* 金色光暈 */
+  .photo-area::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(255,215,0,0.10), transparent 70%);
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+  /* 暗角 */
+  .photo-area::before {
+    content: '';
+    position: absolute; inset: 0;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.15);
+    z-index: 1; pointer-events: none;
+  }
+
+  /* 金色盾形角標 */
+  .rarity-badge {
+    position: absolute;
+    top: 6px; left: 8px;
+    z-index: 3;
+  }
+  .shield {
+    width: 24px; height: 28px;
+    background: linear-gradient(180deg, #FDE68A, #F59E0B, #D97706);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(245,158,11,0.5);
+  }
+  .shield span {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 9px;
+    color: #92400E;
+  }
+
+  /* 等級徽章 */
+  .level-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FDE68A, #F59E0B, #D97706);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 3;
+    box-shadow: 0 0 8px rgba(245,158,11,0.5);
+  }
+  .level-badge .lv {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 10px;
+    color: #92400E; line-height: 1;
+  }
+  .level-badge .dots {
+    display: flex; gap: 2px; margin-top: 1px;
+  }
+  .level-badge .dots span {
+    width: 3px; height: 3px; border-radius: 50%;
+    background: #92400E;
+  }
+
+  /* 資訊區 — v4: 微淡金底色 */
+  .info-area {
+    flex: 1;
+    padding: 4px 15px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+    background: rgba(254,243,199,0.03);
+  }
+
+  /* 金色雙線分隔 */
+  .divider-double {
+    display: flex; flex-direction: column; gap: 2px; margin: 2px 0;
+  }
+  .divider-content {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .gold-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FDE68A, #D97706);
+    box-shadow: 0 0 4px rgba(245,158,11,0.4);
+  }
+  .gold-line {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, #D97706, transparent);
+  }
+
+  /* 金色卡名 + 發光 */
+  .card-name {
+    font-size: 19px; font-weight: 700;
+    background: linear-gradient(90deg, #FDE68A, #F59E0B, #D97706);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 6px rgba(245,158,11,0.4));
+  }
+
+  .stats-row {
+    display: flex; justify-content: space-around;
+    height: 24px; align-items: center;
+  }
+  .stat { display: flex; align-items: center; gap: 3px; }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 8px;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: #92400E;
+  }
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 18px;
+    color: #D97706;
+  }
+
+  .skill-box {
+    background: rgba(254,243,199,0.5);
+    border: 1.5px solid #D97706;
+    border-radius: 4px;
+    padding: 4px 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .skill-box::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(253,230,138,0.3), transparent);
+    animation: skillShimmer 3s ease-in-out infinite;
+  }
+  @keyframes skillShimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+  }
+  .skill-name { font-size: 11px; font-weight: 700; color: #92400E; position: relative; }
+  .skill-desc { font-size: 9px; color: #B45309; margin-top: 1px; position: relative; }
+
+  .footer {
+    display: flex; justify-content: space-between;
+    font-size: 8px; color: #D9770680;
+  }
+
+  /* spec */
+  .spec-panel {
+    width: 300px; background: white; border-radius: 8px;
+    padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .spec-panel h2 { font-size: 14px; color: #D97706; margin-bottom: 8px; }
+  .spec-panel ul { font-size: 11px; color: #6B7280; list-style: none; padding: 0; }
+  .spec-panel li { padding: 3px 0; border-bottom: 1px solid #F3F4F6; }
+  .spec-panel li:last-child { border: none; }
+  .color-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; vertical-align: middle; margin-right: 4px;
+  }
+  .anim-note {
+    font-size: 10px; color: #F59E0B;
+    text-align: center;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🟡 <span>傳說</span> — 黃金聖光卡</h1>
+<div class="anim-note">✨ 金色流光邊框 + 粒子上升 + 旋轉光點 + 金色全息 + 資訊區金光浸染</div>
+
+<div class="card-outer">
+  <div class="orbit-dot"></div>
+  <div class="orbit-dot"></div>
+  <div class="orbit-dot"></div>
+  <div class="orbit-dot"></div>
+
+  <div class="card">
+    <div class="inner-line"></div>
+    <div class="holo-overlay"></div>
+
+    <div class="particles">
+      <div class="particle" style="left:15%;bottom:0;width:3px;height:3px;--dur:4s;--max-op:0.8"></div>
+      <div class="particle" style="left:30%;bottom:0;width:2px;height:2px;--dur:5s;--max-op:0.6;animation-delay:-1s"></div>
+      <div class="particle white" style="left:45%;bottom:0;width:2px;height:2px;--dur:3.5s;--max-op:0.9;animation-delay:-2s"></div>
+      <div class="particle" style="left:55%;bottom:0;width:3px;height:3px;--dur:4.5s;--max-op:0.7;animation-delay:-0.5s"></div>
+      <div class="particle" style="left:70%;bottom:0;width:2.5px;height:2.5px;--dur:5.5s;--max-op:0.8;animation-delay:-3s"></div>
+      <div class="particle white" style="left:85%;bottom:0;width:2px;height:2px;--dur:3s;--max-op:1;animation-delay:-1.5s"></div>
+      <div class="particle" style="left:8%;bottom:0;width:2px;height:2px;--dur:6s;--max-op:0.5;animation-delay:-4s"></div>
+      <div class="particle" style="left:38%;bottom:0;width:3px;height:3px;--dur:4.2s;--max-op:0.7;animation-delay:-2.5s"></div>
+      <div class="particle white" style="left:62%;bottom:0;width:2px;height:2px;--dur:3.8s;--max-op:0.9;animation-delay:-3.5s"></div>
+      <div class="particle" style="left:78%;bottom:0;width:2.5px;height:2.5px;--dur:5s;--max-op:0.6;animation-delay:-0.8s"></div>
+      <div class="particle" style="left:22%;bottom:0;width:2px;height:2px;--dur:4.8s;--max-op:0.7;animation-delay:-2.2s"></div>
+      <div class="particle white" style="left:50%;bottom:0;width:2px;height:2px;--dur:3.2s;--max-op:1;animation-delay:-1.8s"></div>
+    </div>
+
+    <div class="photo-area">
+      <div class="photo-placeholder">
+        <div style="text-align:center;position:relative;z-index:2">
+          <div style="font-size:48px;margin-bottom:4px">🦁</div>
+          <div style="font-size:11px;color:#92400E">玩家的照片</div>
+          <div style="font-size:9px;color:#B45309;margin-top:2px">暖金色調・CLAHE・高對比</div>
+          <div style="font-size:9px;color:#D97706;margin-top:2px">+ 金色光暈 + Foil 60%</div>
+        </div>
+      </div>
+      <div class="rarity-badge">
+        <div class="shield"><span>L</span></div>
+      </div>
+      <div class="level-badge">
+        <span class="lv">Lv.85</span>
+        <div class="dots"><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+    </div>
+
+    <div class="info-area">
+      <div class="divider-double">
+        <div class="divider-content">
+          <div class="gold-line"></div>
+          <div class="gold-dot"></div>
+          <div class="gold-dot"></div>
+          <div class="gold-dot"></div>
+          <div class="gold-line"></div>
+        </div>
+        <div style="display:flex">
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,#FDE68A40,transparent)"></div>
+        </div>
+      </div>
+
+      <div class="card-name">🦁 金陽獅王</div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-label">ATK</span>
+          <span class="stat-value">92</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">DEF</span>
+          <span class="stat-value">78</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">SPD</span>
+          <span class="stat-value">88</span>
+        </div>
+      </div>
+
+      <div class="skill-box">
+        <div class="skill-name">👑 王者咆哮</div>
+        <div class="skill-desc">戰鬥開始時，全隊ATK+15%，持續3回合</div>
+      </div>
+
+      <div class="footer">
+        <span>📍台北  🗣️▶  02.27</span>
+        <span>👤 HaoFu  #00003</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-panel">
+  <h2>v4 設計規格 — 統一風格</h2>
+  <ul>
+    <li><span class="color-dot" style="background:linear-gradient(135deg,#FFFCF5,#FEF3C7)"></span>底色：#FFFCF5→#FEF3C7 暖白→淡金（v4: 不再全金底）</li>
+    <li><span class="color-dot" style="background:#F59E0B"></span>邊框：SweepGradient 金色 3dp 三層</li>
+    <li>金色流光：2秒一圈</li>
+    <li>四角旋轉光點：8秒一圈</li>
+    <li>粒子：12~15個金色 rise + 白閃</li>
+    <li>全息面積：~70%（照片 + 資訊區背景被金光浸染）</li>
+    <li>資訊區微淡金底色（vs 凡品~史詩純白）</li>
+    <li>卡名：Bold 19dp 金色 ShaderMask + Shadow</li>
+    <li>被動技能框：Shimmer 掃光動畫</li>
+    <li>感覺：<b>金光聖物</b> — 整張卡都在發光</li>
+  </ul>
+</div>
+
+</body>
+</html>
