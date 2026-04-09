@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v5 方案C — 漸層深潛 Gradient Dive | 史詩卡</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #0A0B10;
+    font-family: 'Noto Sans TC', sans-serif;
+    gap: 28px; padding: 40px 20px;
+    overflow-x: hidden;
+  }
+
+  h1 {
+    font-size: 16px; color: #A855F7;
+    font-weight: 400; letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  h1 span { font-weight: 700; color: #C084FC; }
+  .subtitle {
+    font-size: 11px; color: #6B7280;
+    letter-spacing: 1px; margin-top: -12px;
+  }
+  .anim-note {
+    font-size: 10px; color: #A855F7;
+    text-align: center;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* === 稀有度深度標尺 === */
+  .depth-scale {
+    display: flex; gap: 4px; align-items: center;
+    margin-top: -8px;
+  }
+  .depth-step {
+    width: 36px; height: 24px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 7px; font-weight: 600;
+    letter-spacing: 0.5px;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+  }
+  .depth-step.active {
+    border-color: #A855F7;
+    box-shadow: 0 0 8px rgba(168,85,247,0.4);
+    transform: scale(1.15);
+  }
+  .d-common { background: #F5F5F7; color: #6B7280; }
+  .d-uncommon { background: #E8F5E9; color: #22C55E; }
+  .d-rare { background: #B8C4D8; color: #3B82F6; }
+  .d-epic { background: #2D1B4E; color: #C084FC; }
+  .d-legendary { background: #1C1608; color: #F59E0B; }
+  .d-mythic { background: #0A0A0F; color: #DC2626; }
+  .depth-arrow {
+    font-size: 10px; color: #4B5563;
+  }
+
+  /* === CARD OUTER === */
+  .card-outer {
+    position: relative;
+    width: 312px; height: 416px;
+  }
+
+  /* 紫色外光暈 — 史詩級的劇烈外光 */
+  .card-outer::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 22px;
+    background: conic-gradient(from var(--glow-angle, 0deg),
+      rgba(168,85,247,0.5),
+      rgba(236,72,153,0.35),
+      rgba(56,189,248,0.35),
+      rgba(168,85,247,0.3),
+      rgba(236,72,153,0.4),
+      rgba(168,85,247,0.5)
+    );
+    filter: blur(18px);
+    opacity: 0.45;
+    animation: rotateGlow 4s linear infinite;
+  }
+  @keyframes rotateGlow {
+    to { --glow-angle: 360deg; }
+  }
+  @property --glow-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  /* === MAIN CARD === */
+  .card {
+    position: relative;
+    width: 300px; height: 400px;
+    /* 史詩 = 深紫漸層（跳崖轉折點！）*/
+    background: linear-gradient(160deg, #2D1B4E 0%, #1A1035 60%, #150D28 100%);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    z-index: 1;
+    box-shadow:
+      0 0 30px rgba(168,85,247,0.35),
+      0 0 60px rgba(168,85,247,0.12);
+  }
+
+  /* 紫+彩虹 SweepGradient 邊框 */
+  .card::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 10px;
+    padding: 2.5px;
+    background: conic-gradient(from var(--glow-angle, 0deg),
+      #A855F7, #EC4899, #38BDF8, #A855F7
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 10;
+    pointer-events: none;
+    animation: rotateGlow 4s linear infinite;
+  }
+  /* 內白線（品牌 DNA — 所有稀有度都有） */
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 7px;
+    border: 0.5px solid rgba(255,255,255,0.08);
+    z-index: 10;
+    pointer-events: none;
+  }
+  .inner-white-line {
+    position: absolute;
+    inset: 6px;
+    border-radius: 5px;
+    border: 0.5px solid rgba(255,255,255,0.04);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* 全息覆蓋層 */
+  .holo-overlay {
+    position: absolute; inset: 0;
+    z-index: 6; pointer-events: none;
+    border-radius: 10px;
+    background: linear-gradient(
+      var(--holo-angle, 135deg),
+      rgba(168,85,247,0.06) 0%,
+      rgba(236,72,153,0.04) 25%,
+      rgba(56,189,248,0.06) 50%,
+      rgba(168,85,247,0.04) 75%
+    );
+    animation: holoShift 3s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+  }
+  @keyframes holoShift {
+    0% { --holo-angle: 115deg; opacity: 0.5; }
+    100% { --holo-angle: 155deg; opacity: 1; }
+  }
+  @property --holo-angle {
+    syntax: '<angle>';
+    initial-value: 135deg;
+    inherits: false;
+  }
+
+  /* === PHOTO AREA === */
+  .photo-area {
+    width: 270px; height: 200px;
+    margin: 15px auto 0;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+    border: 1.5px solid rgba(168,85,247,0.25);
+    box-shadow: 0 0 16px rgba(168,85,247,0.15);
+  }
+  .photo-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #2D1B4E 0%, #4C1D95 40%, #7C3AED 80%, #A78BFA 100%);
+    display: flex; align-items: center; justify-content: center;
+    filter: brightness(1.1) contrast(1.2) saturate(1.1);
+  }
+
+  /* 紫色內發光 */
+  .photo-area::after {
+    content: '';
+    position: absolute; inset: 0;
+    box-shadow: inset 0 0 30px rgba(168,85,247,0.2);
+    border-radius: 6px;
+    z-index: 3; pointer-events: none;
+  }
+  /* 暗角 */
+  .photo-area::before {
+    content: '';
+    position: absolute; inset: 0;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.25);
+    border-radius: 6px;
+    z-index: 2; pointer-events: none;
+  }
+
+  /* 彩虹全息覆蓋 */
+  .photo-holo {
+    position: absolute; inset: 0;
+    z-index: 4; pointer-events: none;
+    background: linear-gradient(
+      var(--holo-angle, 135deg),
+      rgba(168,85,247,0.10) 0%,
+      rgba(236,72,153,0.07) 25%,
+      rgba(56,189,248,0.10) 50%,
+      rgba(168,85,247,0.07) 75%
+    );
+    mix-blend-mode: screen;
+    animation: holoShift 3s ease-in-out infinite alternate;
+    border-radius: 6px;
+  }
+
+  /* sweep 光束 */
+  .sweep-beam {
+    position: absolute;
+    top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(168,85,247,0.15),
+      rgba(236,72,153,0.10),
+      rgba(56,189,248,0.12),
+      transparent
+    );
+    z-index: 5; pointer-events: none;
+    animation: sweepMove 3s ease-in-out infinite;
+    filter: blur(5px);
+    border-radius: 6px;
+  }
+  @keyframes sweepMove {
+    0% { transform: translateX(-150%) skewX(-15deg); opacity: 0; }
+    30% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { transform: translateX(350%) skewX(-15deg); opacity: 0; }
+  }
+
+  /* === BADGES === */
+  .rarity-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    z-index: 6;
+  }
+  .badge-pill {
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #A855F7, #7C3AED);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 8px rgba(168,85,247,0.5);
+  }
+  .badge-pill span {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 8px;
+    color: #FFFFFF;
+    letter-spacing: 1px;
+  }
+  .level-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    z-index: 6;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(45,27,78,0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(168,85,247,0.2);
+  }
+  .level-badge span {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 10px;
+    color: #C4B5FD;
+  }
+
+  /* === INFO AREA === */
+  .info-area {
+    flex: 1;
+    padding: 8px 15px 10px;
+    display: flex; flex-direction: column; gap: 5px;
+    z-index: 2;
+  }
+
+  /* 分隔線 — 彩虹漸隱 */
+  .divider {
+    height: 1.5px;
+    background: linear-gradient(90deg,
+      transparent,
+      #A855F750,
+      #EC489940,
+      #38BDF850,
+      transparent
+    );
+    margin: 2px 0;
+    animation: dividerPulse 3s ease-in-out infinite;
+  }
+  @keyframes dividerPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* 卡名 — 彩虹 ShaderMask */
+  .card-name {
+    font-size: 18px; font-weight: 700;
+    background: linear-gradient(90deg, #C4B5FD, #F9A8D4, #67E8F9, #C4B5FD);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmerName 3s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(168,85,247,0.4));
+  }
+  @keyframes shimmerName {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+
+  /* 數值列 */
+  .stats-row {
+    display: flex; justify-content: space-around;
+    align-items: center;
+    padding: 3px 0;
+  }
+  .stat {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 1px;
+  }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 8px;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: rgba(255,255,255,0.35);
+  }
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 20px;
+    line-height: 1;
+  }
+  .stat-atk .stat-value { color: #F87171; text-shadow: 0 0 8px rgba(248,113,113,0.4); }
+  .stat-def .stat-value { color: #60A5FA; text-shadow: 0 0 8px rgba(96,165,250,0.4); }
+  .stat-spd .stat-value { color: #34D399; text-shadow: 0 0 8px rgba(52,211,153,0.4); }
+
+  /* 技能框 */
+  .skill-box {
+    background: rgba(168,85,247,0.06);
+    border: 1px solid rgba(168,85,247,0.15);
+    border-radius: 6px;
+    padding: 5px 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .skill-box::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(168,85,247,0.1),
+      transparent
+    );
+    animation: skillSweep 3s ease-in-out infinite;
+  }
+  @keyframes skillSweep {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+  }
+  .skill-name {
+    font-size: 11px; font-weight: 700;
+    color: #C4B5FD;
+    position: relative;
+  }
+  .skill-desc {
+    font-size: 9px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+    position: relative;
+  }
+
+  /* 底部 */
+  .footer {
+    display: flex; justify-content: space-between;
+    font-size: 8px;
+    color: rgba(255,255,255,0.25);
+  }
+
+  /* === 對比展示區 — 3 張小縮略圖 === */
+  .comparison {
+    display: flex; gap: 12px;
+    align-items: end;
+  }
+  .mini-card {
+    width: 75px; height: 100px;
+    border-radius: 6px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px;
+    font-size: 8px; font-weight: 600;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+  }
+  .mini-card .label { color: #9CA3AF; font-size: 7px; }
+  .mini-card .rarity-text { font-size: 10px; font-weight: 700; }
+
+  .mini-common {
+    background: linear-gradient(160deg, #F5F5F7, #EDEDF0);
+    border: 1px solid #D1D5DB;
+  }
+  .mini-common .rarity-text { color: #6B7280; }
+
+  .mini-rare {
+    background: linear-gradient(160deg, #D0D8E8, #B8C4D8);
+    border: 1.5px solid #60A5FA;
+    box-shadow: 0 0 6px rgba(96,165,250,0.2);
+  }
+  .mini-rare .rarity-text { color: #3B82F6; }
+
+  .mini-epic {
+    background: linear-gradient(160deg, #2D1B4E, #1A1035);
+    border: 2px solid #A855F7;
+    box-shadow: 0 0 10px rgba(168,85,247,0.3);
+  }
+  .mini-epic .rarity-text { color: #C084FC; }
+  .mini-epic .label { color: rgba(255,255,255,0.4); }
+
+  .mini-arrow {
+    font-size: 14px; color: #4B5563;
+    margin-bottom: 40px;
+  }
+
+  /* 跳崖標註 */
+  .cliff-marker {
+    position: relative;
+  }
+  .cliff-marker::after {
+    content: '跳崖！';
+    position: absolute;
+    top: -16px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 8px; font-weight: 700;
+    color: #F59E0B;
+    white-space: nowrap;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  /* === SPEC PANEL === */
+  .spec-panel {
+    width: 300px;
+    background: #16171E;
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid #2A2B35;
+  }
+  .spec-panel h2 {
+    font-size: 14px; color: #A855F7;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+  .spec-panel ul {
+    font-size: 11px; color: #9CA3AF;
+    list-style: none; padding: 0;
+  }
+  .spec-panel li {
+    padding: 4px 0;
+    border-bottom: 1px solid #1F2028;
+  }
+  .spec-panel li:last-child { border: none; }
+  .spec-panel li strong { color: #C4B5FD; }
+  .color-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; vertical-align: middle; margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>v5-C <span>漸層深潛</span> Gradient Dive</h1>
+<p class="subtitle">底色隨稀有度加深 — 史詩卡概念（跳崖轉折點）</p>
+
+<!-- 深度標尺 -->
+<div class="depth-scale">
+  <div class="depth-step d-common">C</div>
+  <div class="depth-arrow">&rarr;</div>
+  <div class="depth-step d-uncommon">U</div>
+  <div class="depth-arrow">&rarr;</div>
+  <div class="depth-step d-rare">R</div>
+  <div class="depth-arrow" style="color:#F59E0B;font-weight:bold">&#x21E8;</div>
+  <div class="depth-step d-epic active">E</div>
+  <div class="depth-arrow">&rarr;</div>
+  <div class="depth-step d-legendary">L</div>
+  <div class="depth-arrow">&rarr;</div>
+  <div class="depth-step d-mythic">M</div>
+</div>
+
+<div class="anim-note">
+  史詩 = 跳崖轉折！從淺色一瞬沉入深紫 + 彩虹旋轉邊框 + 全息
+</div>
+
+<!-- 縮略對比 -->
+<div class="comparison">
+  <div class="mini-card mini-common">
+    <span class="label">淺色</span>
+    <span class="rarity-text">凡品</span>
+    <span class="label">#F5F5F7</span>
+  </div>
+  <div class="mini-arrow">&rarr;</div>
+  <div class="mini-card mini-rare">
+    <span class="label">淺色</span>
+    <span class="rarity-text">稀有</span>
+    <span class="label">#B8C4D8</span>
+  </div>
+  <div class="cliff-marker">
+    <div class="mini-arrow" style="color:#F59E0B;font-size:18px">&#x21E8;</div>
+  </div>
+  <div class="mini-card mini-epic">
+    <span class="label">暗色！</span>
+    <span class="rarity-text">史詩</span>
+    <span class="label">#2D1B4E</span>
+  </div>
+</div>
+
+<!-- 主卡 -->
+<div class="card-outer">
+  <div class="card">
+    <div class="inner-white-line"></div>
+    <div class="holo-overlay"></div>
+
+    <div class="photo-area">
+      <div class="photo-placeholder">
+        <div style="text-align:center;position:relative;z-index:5">
+          <div style="font-size:48px;margin-bottom:4px">🐺</div>
+          <div style="font-size:11px;color:#E2E4EA">玩家的照片</div>
+          <div style="font-size:9px;color:#C084FC;margin-top:2px">首次暗底 + 彩虹全息 + sweep</div>
+        </div>
+      </div>
+      <div class="photo-holo"></div>
+      <div class="sweep-beam"></div>
+      <div class="rarity-badge">
+        <div class="badge-pill"><span>EPIC</span></div>
+      </div>
+      <div class="level-badge">
+        <span>Lv.62</span>
+      </div>
+    </div>
+
+    <div class="info-area">
+      <div class="divider"></div>
+
+      <div class="card-name">暗影魔狼</div>
+
+      <div class="stats-row">
+        <div class="stat stat-atk">
+          <span class="stat-label">ATK</span>
+          <span class="stat-value">72</span>
+        </div>
+        <div class="stat stat-def">
+          <span class="stat-label">DEF</span>
+          <span class="stat-value">58</span>
+        </div>
+        <div class="stat stat-spd">
+          <span class="stat-label">SPD</span>
+          <span class="stat-value">85</span>
+        </div>
+      </div>
+
+      <div class="skill-box">
+        <div class="skill-name">🌀 虛空裂隙</div>
+        <div class="skill-desc">被攻擊時有 20% 機率反彈 50% 傷害</div>
+      </div>
+
+      <div class="footer">
+        <span>台北 02.28</span>
+        <span>#00042</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-panel">
+  <h2>方案C 設計規格 — 漸層深潛</h2>
+  <ul>
+    <li><strong>核心理念</strong>：底色隨稀有度加深，史詩是跳崖轉折點</li>
+    <li><span class="color-dot" style="background:linear-gradient(135deg,#F5F5F7,#EDEDF0)"></span><strong>凡品</strong>：#F5F5F7 銀灰（淺色、友善、有質感）</li>
+    <li><span class="color-dot" style="background:linear-gradient(135deg,#E8F5E9,#F0F4F1)"></span><strong>精良</strong>：#E8F5E9 淡綠白（清新薄荷）</li>
+    <li><span class="color-dot" style="background:linear-gradient(135deg,#D0D8E8,#B8C4D8)"></span><strong>稀有</strong>：#B8C4D8 銀藍灰（金屬質感、浮雕文字）</li>
+    <li><span class="color-dot" style="background:linear-gradient(135deg,#2D1B4E,#1A1035)"></span><strong>史詩</strong>：#2D1B4E 深紫（跳崖！首次暗色 + 彩虹邊框）★</li>
+    <li><span class="color-dot" style="background:linear-gradient(135deg,#1C1608,#2A1F0A)"></span><strong>傳說</strong>：#1C1608 深金黑（金色粒子 + 三層金框）</li>
+    <li><span class="color-dot" style="background:linear-gradient(135deg,#0A0A0F,#050508)"></span><strong>神話</strong>：#0A0A0F 極黑（邊框消失 + 碎裂紅光）</li>
+    <li><strong>品牌 DNA</strong>：所有卡都有 0.5dp 內白線（統一標記）</li>
+    <li><strong>情緒設計</strong>：淺→淺→淺→暗！→暗→極暗 = 史詩就是爆發點</li>
+    <li><strong>參考</strong>：Panini Prizm 色階 + 信用卡階梯 + Diablo 裝備色</li>
+  </ul>
+</div>
+
+</body>
+</html>
