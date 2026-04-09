@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoxCards — 🔵 稀有：水晶折射卡</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #E4E8EE;
+    font-family: 'Noto Sans TC', sans-serif;
+    gap: 24px; padding: 40px 20px;
+  }
+  h1 { font-size: 18px; color: #3B82F6; font-weight: 400; letter-spacing: 2px; }
+  h1 span { font-weight: 700; color: #1D4ED8; }
+
+  .card-outer {
+    position: relative;
+    width: 308px; height: 408px;
+  }
+  /* 寶藍色外光暈 */
+  .card-outer::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 14px;
+    background: radial-gradient(ellipse at 50% 50%, #3B82F680, transparent 70%);
+    filter: blur(8px);
+    opacity: 0.35;
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0.25; }
+    50% { opacity: 0.45; }
+  }
+
+  .card {
+    position: relative;
+    width: 300px; height: 400px;
+    background: #FAFBFC;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    z-index: 1;
+  }
+
+  /* 水晶折射邊框 — 半透明玻璃感 + 藍色折射 */
+  .card::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 10px;
+    padding: 2.5px;
+    background: linear-gradient(
+      var(--refract-angle, 135deg),
+      rgba(59,130,246,0.15) 0%,
+      rgba(147,197,253,0.5) 15%,
+      rgba(59,130,246,0.6) 25%,
+      rgba(219,234,254,0.3) 35%,
+      rgba(96,165,250,0.5) 50%,
+      rgba(191,219,254,0.3) 65%,
+      rgba(59,130,246,0.6) 75%,
+      rgba(147,197,253,0.5) 85%,
+      rgba(59,130,246,0.15) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 10;
+    pointer-events: none;
+    animation: refractShift 4s ease-in-out infinite alternate;
+  }
+  @keyframes refractShift {
+    0% { --refract-angle: 110deg; }
+    100% { --refract-angle: 160deg; }
+  }
+  @property --refract-angle {
+    syntax: '<angle>';
+    initial-value: 135deg;
+    inherits: false;
+  }
+
+  /* 內側折射光暈 — 玻璃邊框的內部光澤 */
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 8px;
+    box-shadow:
+      inset 0 0 12px rgba(59,130,246,0.06),
+      inset 0 1px 0 rgba(255,255,255,0.4);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* 折射光帶 — 在卡面上緩慢移動的藍色光帶 */
+  .refraction-beam {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+  .refraction-beam::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from var(--beam-angle, 0deg) at 50% 50%,
+      transparent 0deg,
+      transparent 170deg,
+      rgba(59,130,246,0.04) 175deg,
+      rgba(147,197,253,0.08) 178deg,
+      rgba(96,165,250,0.12) 180deg,
+      rgba(147,197,253,0.08) 182deg,
+      rgba(59,130,246,0.04) 185deg,
+      transparent 190deg,
+      transparent 360deg
+    );
+    animation: beamRotate 6s linear infinite;
+  }
+  @keyframes beamRotate {
+    to { --beam-angle: 360deg; }
+  }
+  @property --beam-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  /* 微傾斜動畫（模擬陀螺儀） */
+  .card-tilt {
+    animation: tilt3d 8s ease-in-out infinite;
+    transform-style: preserve-3d;
+    perspective: 800px;
+  }
+  @keyframes tilt3d {
+    0%, 100% { transform: rotateY(0deg) rotateX(0deg); }
+    25% { transform: rotateY(1.5deg) rotateX(-0.8deg); }
+    50% { transform: rotateY(-1deg) rotateX(0.8deg); }
+    75% { transform: rotateY(1deg) rotateX(-0.5deg); }
+  }
+
+  /* 照片區 */
+  .photo-area {
+    width: 270px; height: 240px;
+    margin: 15px auto 0;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .photo-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 40%, #DBEAFE 100%);
+    display: flex; align-items: center; justify-content: center;
+    filter: brightness(1.04) contrast(1.12) saturate(1.08);
+  }
+  /* 藍色光暈（照片區上方輕微折射） */
+  .photo-area::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      var(--refract-angle, 135deg),
+      rgba(59,130,246,0.04) 0%,
+      rgba(147,197,253,0.06) 40%,
+      rgba(59,130,246,0.04) 100%
+    );
+    animation: refractShift 4s ease-in-out infinite alternate;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+  /* 暗角 */
+  .photo-area::before {
+    content: '';
+    position: absolute; inset: 0;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.10);
+    z-index: 1; pointer-events: none;
+  }
+
+  /* 水晶菱形角標 — 半透明 + 藍色光澤 */
+  .rarity-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    z-index: 3;
+  }
+  .diamond {
+    width: 24px; height: 24px;
+    background: linear-gradient(135deg,
+      rgba(59,130,246,0.7),
+      rgba(191,219,254,0.9),
+      rgba(59,130,246,0.7)
+    );
+    transform: rotate(45deg);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow:
+      0 1px 6px rgba(59,130,246,0.3),
+      inset 0 1px 2px rgba(255,255,255,0.4);
+    animation: badgeShimmer 3s ease-in-out infinite;
+  }
+  @keyframes badgeShimmer {
+    0%, 100% { box-shadow: 0 1px 6px rgba(59,130,246,0.3), inset 0 1px 2px rgba(255,255,255,0.4); }
+    50% { box-shadow: 0 2px 10px rgba(59,130,246,0.5), inset 0 1px 2px rgba(255,255,255,0.6); }
+  }
+  .diamond span {
+    transform: rotate(-45deg);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 8px;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+
+  /* 等級徽章 — 水晶藍 */
+  .level-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,
+      rgba(59,130,246,0.6),
+      rgba(191,219,254,0.8),
+      rgba(96,165,250,0.6)
+    );
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 3;
+    box-shadow:
+      0 1px 6px rgba(59,130,246,0.3),
+      inset 0 1px 2px rgba(255,255,255,0.3);
+  }
+  .level-badge .lv {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 10px;
+    color: white; line-height: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .level-badge .dots {
+    display: flex; gap: 2px; margin-top: 1px;
+  }
+  .level-badge .dots span {
+    width: 3px; height: 3px; border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 3px rgba(255,255,255,0.6);
+  }
+
+  /* 資訊區 */
+  .info-area {
+    flex: 1;
+    padding: 4px 15px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+
+  /* 分隔線 — 折射光帶 */
+  .divider {
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(59,130,246,0.15) 10%,
+      rgba(147,197,253,0.5) 30%,
+      rgba(96,165,250,0.6) 50%,
+      rgba(147,197,253,0.5) 70%,
+      rgba(59,130,246,0.15) 90%,
+      transparent 100%
+    );
+    border-radius: 1px;
+    margin: 2px 0;
+    animation: dividerShimmer 3s ease-in-out infinite alternate;
+  }
+  @keyframes dividerShimmer {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+
+  /* 水晶折射卡名 — 藍色光澤文字 */
+  .card-name {
+    font-size: 17px; font-weight: 700;
+    color: #1E40AF;
+    text-shadow:
+      0 0 8px rgba(59,130,246,0.15),
+      -0.5px -0.5px 0 rgba(255,255,255,0.5),
+      0.5px 0.5px 1px rgba(30,64,175,0.15);
+  }
+
+  .stats-row {
+    display: flex; justify-content: space-around;
+    height: 24px; align-items: center;
+  }
+  .stat { display: flex; align-items: center; gap: 3px; }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 8px;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: #3B82F6;
+  }
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 18px;
+    color: #1E40AF;
+  }
+
+  .skill-box {
+    background: rgba(219,234,254,0.3);
+    border: 1px solid rgba(59,130,246,0.25);
+    border-radius: 4px;
+    padding: 4px 8px;
+  }
+  .skill-name { font-size: 11px; font-weight: 700; color: #1E40AF; }
+  .skill-desc { font-size: 9px; color: #64748B; margin-top: 1px; }
+
+  .footer {
+    display: flex; justify-content: space-between;
+    font-size: 8px; color: #3B82F680;
+  }
+
+  /* spec */
+  .spec-panel {
+    width: 300px; background: white; border-radius: 8px;
+    padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .spec-panel h2 { font-size: 14px; color: #1D4ED8; margin-bottom: 8px; }
+  .spec-panel ul { font-size: 11px; color: #6B7280; list-style: none; padding: 0; }
+  .spec-panel li { padding: 3px 0; border-bottom: 1px solid #F3F4F6; }
+  .spec-panel li:last-child { border: none; }
+  .color-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; vertical-align: middle; margin-right: 4px;
+  }
+  .anim-note {
+    font-size: 10px; color: #3B82F6;
+    text-align: center;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🔵 <span>稀有</span> — 水晶折射卡</h1>
+<div class="anim-note">💎 藍色折射光帶緩慢旋轉 + 邊框角度漸變 + 微傾斜（陀螺儀互動）</div>
+
+<div class="card-tilt">
+  <div class="card-outer">
+    <div class="card">
+      <div class="refraction-beam"></div>
+
+      <div class="photo-area">
+        <div class="photo-placeholder">
+          <div style="text-align:center;position:relative;z-index:2">
+            <div style="font-size:48px;margin-bottom:4px">💎</div>
+            <div style="font-size:11px;color:#1E40AF">玩家的照片</div>
+            <div style="font-size:9px;color:#3B82F6;margin-top:2px">冷色調・CLAHE・銳化</div>
+            <div style="font-size:9px;color:#60A5FA;margin-top:2px">+ 照片區微藍折射覆蓋</div>
+          </div>
+        </div>
+        <div class="rarity-badge">
+          <div class="diamond"><span>R</span></div>
+        </div>
+        <div class="level-badge">
+          <span class="lv">Lv.45</span>
+          <div class="dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+
+      <div class="info-area">
+        <div class="divider"></div>
+
+        <div class="card-name">💎 晶藍守護者</div>
+
+        <div class="stats-row">
+          <div class="stat">
+            <span class="stat-label">ATK</span>
+            <span class="stat-value">52</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">DEF</span>
+            <span class="stat-value">68</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">SPD</span>
+            <span class="stat-value">41</span>
+          </div>
+        </div>
+
+        <div class="skill-box">
+          <div class="skill-name">🛡️ 稜鏡護壁</div>
+          <div class="skill-desc">受到攻擊時，25%機率折射20%傷害回敵方</div>
+        </div>
+
+        <div class="footer">
+          <span>📍台北  🗣️▶  02.27</span>
+          <span>👤 HaoFu</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-panel">
+  <h2>v4 設計規格 — 統一風格</h2>
+  <ul>
+    <li><span class="color-dot" style="background:#FAFBFC"></span>底色：#FAFBFC 極淡藍白（統一白底）</li>
+    <li><span class="color-dot" style="background:#3B82F6"></span>邊框：水晶折射漸層 2.5dp（藍色棱鏡光帶）</li>
+    <li>邊框動畫：角度 110°↔160° 漸變 4秒循環</li>
+    <li>折射光帶：conic-gradient 藍色光帶 6秒旋轉</li>
+    <li>外光暈：blur(8) + #3B82F6 35%（呼吸脈動 3秒）</li>
+    <li>角標：半透明藍色菱形「R」+ 光澤脈動</li>
+    <li>卡名：Bold 17dp #1E40AF + 微藍光暈 + 浮雕</li>
+    <li>分隔線：藍色折射漸層 2dp（呼吸明暗）</li>
+    <li>光效面積：~8%（邊框折射 + 卡面光帶 + 照片微覆蓋）</li>
+    <li>陀螺儀互動：折射角度響應 + 微傾斜 ±1.5°</li>
+    <li>vs 精良差異：<b>第一張有動態光效的卡</b></li>
+    <li>vs Epic 差異：折射是單色（藍）→ Epic 升級為全彩虹</li>
+    <li>感覺：<b>手中握著一塊藍水晶</b> — 光在裡面流動</li>
+  </ul>
+</div>
+
+</body>
+</html>
