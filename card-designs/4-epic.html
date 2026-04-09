@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoxCards — 🟣 史詩：全息閃卡</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #E8E0F0;
+    font-family: 'Noto Sans TC', sans-serif;
+    gap: 24px; padding: 40px 20px;
+  }
+  h1 { font-size: 18px; color: #7C3AED; font-weight: 400; letter-spacing: 2px; }
+  h1 span { font-weight: 700; color: #5B21B6; }
+
+  .card-outer {
+    position: relative;
+    width: 310px; height: 410px;
+  }
+  /* 彩虹外光 */
+  .card-outer::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 16px;
+    background: conic-gradient(from var(--angle, 0deg),
+      #FF6B6B, #FECA57, #48DBFB, #FF9FF3, #54A0FF, #5F27CD, #FF6B6B
+    );
+    filter: blur(10px);
+    opacity: 0.20;
+    animation: rotateGlow 4s linear infinite;
+  }
+  @keyframes rotateGlow {
+    to { --angle: 360deg; }
+  }
+  @property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  .card {
+    position: relative;
+    width: 300px; height: 400px;
+    background: #FAFAFA;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    z-index: 1;
+  }
+
+  /* 彩虹 SweepGradient 邊框 */
+  .card::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 10px;
+    padding: 2.5px;
+    background: conic-gradient(from var(--angle, 0deg),
+      #FF6B6B, #FECA57, #48DBFB, #FF9FF3, #54A0FF, #5F27CD, #FF6B6B
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 10;
+    pointer-events: none;
+    animation: rotateGlow 4s linear infinite;
+  }
+
+  /* 全息效果覆蓋 — 只在照片區 */
+  .holo-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background: linear-gradient(
+      var(--holo-angle, 135deg),
+      rgba(255,107,107,0.05) 0%,
+      rgba(254,202,87,0.07) 15%,
+      rgba(72,219,251,0.07) 30%,
+      rgba(255,159,243,0.05) 45%,
+      rgba(84,160,255,0.07) 60%,
+      rgba(95,39,205,0.05) 75%,
+      rgba(255,107,107,0.05) 100%
+    );
+    animation: holoShift 3s ease-in-out infinite alternate;
+    mix-blend-mode: overlay;
+  }
+  @keyframes holoShift {
+    0% { --holo-angle: 115deg; opacity: 0.6; }
+    100% { --holo-angle: 155deg; opacity: 1; }
+  }
+  @property --holo-angle {
+    syntax: '<angle>';
+    initial-value: 135deg;
+    inherits: false;
+  }
+
+  /* 微傾斜動畫（模擬陀螺儀） */
+  .card-tilt {
+    animation: tilt3d 6s ease-in-out infinite;
+    transform-style: preserve-3d;
+    perspective: 800px;
+  }
+  @keyframes tilt3d {
+    0%, 100% { transform: rotateY(0deg) rotateX(0deg); }
+    25% { transform: rotateY(2deg) rotateX(-1deg); }
+    50% { transform: rotateY(-1deg) rotateX(1deg); }
+    75% { transform: rotateY(1.5deg) rotateX(-0.5deg); }
+  }
+
+  /* 照片區 */
+  .photo-area {
+    width: 270px; height: 240px;
+    margin: 15px auto 0;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .photo-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #E0D4F5 0%, #C7B8EA 40%, #D6CCF0 100%);
+    display: flex; align-items: center; justify-content: center;
+    filter: contrast(1.20) saturate(1.15);
+  }
+  /* 全息光澤（照片區域 Foil） */
+  .photo-area::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(
+      var(--holo-angle, 135deg),
+      rgba(255,107,107,0.10) 0%,
+      rgba(72,219,251,0.10) 33%,
+      rgba(255,159,243,0.10) 66%,
+      rgba(84,160,255,0.10) 100%
+    );
+    animation: holoShift 3s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+    pointer-events: none;
+  }
+  /* 暗角 */
+  .photo-area::before {
+    content: '';
+    position: absolute; inset: 0;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.18);
+    z-index: 1; pointer-events: none;
+  }
+
+  /* 全息圓形角標 */
+  .rarity-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    z-index: 3;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: conic-gradient(from var(--angle, 0deg),
+      #FF6B6B, #FECA57, #48DBFB, #FF9FF3, #FF6B6B
+    );
+    animation: rotateGlow 4s linear infinite;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 6px rgba(168,85,247,0.3);
+  }
+  .rarity-badge::after {
+    content: 'E';
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 10px;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  /* 等級徽章 — 全息 */
+  .level-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: conic-gradient(from var(--angle, 0deg),
+      #FF6B6B, #FECA57, #48DBFB, #FF9FF3, #FF6B6B
+    );
+    animation: rotateGlow 4s linear infinite;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 3;
+    box-shadow: 0 0 6px rgba(168,85,247,0.3);
+  }
+  .level-badge .lv {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 10px;
+    color: white; line-height: 1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .level-badge .dots {
+    display: flex; gap: 2px; margin-top: 1px;
+  }
+  .level-badge .dots span {
+    width: 3px; height: 3px; border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 3px rgba(255,255,255,0.8);
+  }
+
+  /* 資訊區 */
+  .info-area {
+    flex: 1;
+    padding: 4px 15px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+
+  /* 彩虹漸層分隔線 */
+  .divider {
+    height: 2px;
+    background: linear-gradient(90deg,
+      #FF6B6B, #FECA57, #48DBFB, #FF9FF3, #54A0FF
+    );
+    border-radius: 1px;
+    margin: 2px 0;
+  }
+
+  /* 彩虹卡名 */
+  .card-name {
+    font-size: 18px; font-weight: 700;
+    background: linear-gradient(90deg, #FF6B6B, #FECA57, #48DBFB, #FF9FF3, #54A0FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stats-row {
+    display: flex; justify-content: space-around;
+    height: 24px; align-items: center;
+  }
+  .stat { display: flex; align-items: center; gap: 3px; }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 8px;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: #7C3AED;
+  }
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 18px;
+    color: #7C3AED;
+  }
+
+  .skill-box {
+    background: linear-gradient(135deg,
+      rgba(255,107,107,0.03),
+      rgba(72,219,251,0.03),
+      rgba(255,159,243,0.03)
+    );
+    border: 1px solid;
+    border-image: linear-gradient(90deg, #FF6B6B40, #48DBFB40, #FF9FF340) 1;
+    border-radius: 4px;
+    padding: 4px 8px;
+  }
+  .skill-name { font-size: 11px; font-weight: 700; color: #7C3AED; }
+  .skill-desc { font-size: 9px; color: #6B7280; margin-top: 1px; }
+
+  .footer {
+    display: flex; justify-content: space-between;
+    font-size: 8px; color: #7C3AED80;
+  }
+
+  /* spec */
+  .spec-panel {
+    width: 300px; background: white; border-radius: 8px;
+    padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .spec-panel h2 { font-size: 14px; color: #5B21B6; margin-bottom: 8px; }
+  .spec-panel ul { font-size: 11px; color: #6B7280; list-style: none; padding: 0; }
+  .spec-panel li { padding: 3px 0; border-bottom: 1px solid #F3F4F6; }
+  .spec-panel li:last-child { border: none; }
+  .color-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; vertical-align: middle; margin-right: 4px;
+  }
+  .anim-note {
+    font-size: 10px; color: #A855F7;
+    text-align: center;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🟣 <span>史詩</span> — 全息閃卡</h1>
+<div class="anim-note">✨ 彩虹邊框流光 + 照片區全息光澤 + 微傾斜（陀螺儀互動）</div>
+
+<div class="card-tilt">
+  <div class="card-outer">
+    <div class="card">
+      <div class="holo-overlay"></div>
+
+      <div class="photo-area">
+        <div class="photo-placeholder">
+          <div style="text-align:center;position:relative;z-index:2">
+            <div style="font-size:48px;margin-bottom:4px">🐉</div>
+            <div style="font-size:11px;color:#5B21B6">玩家的照片</div>
+            <div style="font-size:9px;color:#7C3AED;margin-top:2px">高對比・CLAHE・微紫色調</div>
+            <div style="font-size:9px;color:#A855F7;margin-top:2px">+ 照片區 Foil 全息光澤 35%</div>
+          </div>
+        </div>
+        <div class="rarity-badge"></div>
+        <div class="level-badge">
+          <span class="lv">Lv.62</span>
+          <div class="dots"><span></span><span></span><span></span><span></span></div>
+        </div>
+      </div>
+
+      <div class="info-area">
+        <div class="divider"></div>
+
+        <div class="card-name">🐉 虹彩飛龍</div>
+
+        <div class="stats-row">
+          <div class="stat">
+            <span class="stat-label">ATK</span>
+            <span class="stat-value">78</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">DEF</span>
+            <span class="stat-value">65</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">SPD</span>
+            <span class="stat-value">82</span>
+          </div>
+        </div>
+
+        <div class="skill-box">
+          <div class="skill-name">🌈 稜鏡之息</div>
+          <div class="skill-desc">每次攻擊隨機附加一種屬性效果</div>
+        </div>
+
+        <div class="footer">
+          <span>📍台北  🗣️▶  02.27</span>
+          <span>👤 HaoFu  #00157</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-panel">
+  <h2>v4 設計規格 — 統一風格</h2>
+  <ul>
+    <li><span class="color-dot" style="background:#FAFAFA"></span>底色：#FAFAFA 統一白底（全息需要亮底）</li>
+    <li><span class="color-dot" style="background:conic-gradient(#FF6B6B,#FECA57,#48DBFB,#FF9FF3,#FF6B6B)"></span>邊框：SweepGradient 彩虹 2.5dp</li>
+    <li>彩虹流光：4秒轉一圈</li>
+    <li>外光：blur(10) + 彩虹 20%</li>
+    <li>角標：全息彩虹圓形「E」</li>
+    <li>全息面積：~40%（照片區 Foil 35%）</li>
+    <li>陀螺儀互動：Foil角度 + 卡片傾斜 ±3°</li>
+    <li>卡名：Bold 18dp 彩虹 ShaderMask</li>
+    <li>首次出現：全服編號 #XXXXX</li>
+    <li>殺手功能：轉手機 → 光澤移動 → 錄影分享</li>
+    <li>感覺：<b>寶可夢閃卡！</b>第一個讓人想錄影的等級</li>
+  </ul>
+</div>
+
+</body>
+</html>
