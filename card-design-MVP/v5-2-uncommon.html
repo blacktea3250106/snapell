@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snapell v5 — 🟢 精良：呼吸微光卡</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #0A0B10;
+    font-family: 'Noto Sans TC', sans-serif;
+    gap: 28px; padding: 40px 20px;
+  }
+  h1 { font-size: 16px; color: #22C55E; font-weight: 400; letter-spacing: 3px; }
+  h1 span { font-weight: 700; color: #4ADE80; }
+  .subtitle { font-size: 11px; color: #52525B; letter-spacing: 1px; margin-top: -12px; }
+  .anim-note {
+    font-size: 10px; color: #22C55E; text-align: center;
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+  /* === CARD === */
+  .card {
+    position: relative;
+    width: 300px; height: 400px;
+    background: #1A1D1A;
+    border: 1.5px solid #22C55E;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow:
+      0 4px 14px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(34,197,94,0.08);
+    animation: breatheGlow 3s ease-in-out infinite;
+  }
+  @keyframes breatheGlow {
+    0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.5), 0 0 6px rgba(34,197,94,0.04); }
+    50% { box-shadow: 0 4px 14px rgba(0,0,0,0.5), 0 0 12px rgba(34,197,94,0.12); }
+  }
+
+  /* 噪點紋理 */
+  .card::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 12px;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    z-index: 1; pointer-events: none; opacity: 0.5;
+  }
+
+  /* === PHOTO === */
+  .photo-area {
+    width: 270px; height: 200px;
+    margin: 15px auto 0;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+    border: 0.5px solid rgba(34,197,94,0.08);
+  }
+  .photo-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #1A2E1A 0%, #223322 50%, #1A2E1A 100%);
+    display: flex; align-items: center; justify-content: center;
+    filter: brightness(1.03) contrast(1.05) saturate(1.03);
+  }
+
+  /* === BADGES === */
+  .rarity-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    z-index: 6;
+  }
+  .rarity-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #22C55E;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 0; /* dot is too small for text */
+    color: white;
+  }
+
+  /* === INFO === */
+  .info-area {
+    flex: 1;
+    padding: 8px 15px 10px;
+    display: flex; flex-direction: column; gap: 5px;
+    z-index: 2;
+  }
+  .divider { height: 1.5px; background: rgba(34,197,94,0.3); margin: 2px 0; }
+  .card-name { font-size: 16px; font-weight: 500; color: #D4D4D8; }
+  .stats-row {
+    display: flex; gap: 32px;
+    align-items: center; padding: 2px 0;
+  }
+  .stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 8px;
+    text-transform: uppercase; letter-spacing: 2px; color: #71717A;
+  }
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 18px;
+    color: #A1A1AA; line-height: 1;
+  }
+
+  .skill-box {
+    background: #1A2E1A;
+    border: 1px solid rgba(34,197,94,0.15);
+    border-radius: 6px; padding: 5px 8px;
+  }
+  .skill-name { font-size: 13px; font-weight: 500; color: #A1A1AA; }
+  .skill-desc { font-size: 11px; color: #71717A; margin-top: 2px; }
+
+  .card-desc {
+    font-size: 10px; color: #52525B; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* === SPEC PANEL === */
+  .spec-panel {
+    width: 320px; background: #16171E;
+    border-radius: 10px; padding: 16px;
+    border: 1px solid #2A2B35;
+  }
+  .spec-panel h2 { font-size: 14px; color: #4ADE80; margin-bottom: 10px; letter-spacing: 1px; }
+  .spec-panel ul { font-size: 11px; color: #9CA3AF; list-style: none; padding: 0; }
+  .spec-panel li { padding: 4px 0; border-bottom: 1px solid #1F2028; }
+  .spec-panel li:last-child { border: none; }
+  .spec-panel li strong { color: #4ADE80; }
+  .color-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; vertical-align: middle; margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🟢 <span>精良</span> — 呼吸微光卡</h1>
+<p class="subtitle">v5「暗匣浮光」Dark Frame + Rising Light</p>
+<div class="anim-note">邊框光暈呼吸脈動 3s 循環</div>
+
+<div class="card">
+  <div class="photo-area">
+    <div class="photo-placeholder">
+      <div style="text-align:center">
+        <div style="font-size:48px;margin-bottom:4px">🌵</div>
+        <div style="font-size:11px;color:#71717A">玩家的照片</div>
+        <div style="font-size:9px;color:#4ADE80;margin-top:2px">微暖色調 brightness 1.03</div>
+      </div>
+    </div>
+    <div class="rarity-badge">
+      <div class="rarity-dot"></div>
+    </div>
+  </div>
+
+  <div class="info-area">
+    <div class="divider"></div>
+    <div class="card-name">刺刺小勇者</div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-label">ATK</span>
+        <span class="stat-value">22</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">DEF</span>
+        <span class="stat-value">25</span>
+      </div>
+    </div>
+
+    <div class="skill-box">
+      <div class="skill-name">🌿 荊棘反擊</div>
+      <div class="skill-desc">被攻擊時反彈 3 點傷害</div>
+    </div>
+
+    <div class="card-desc">沙漠中屹立不搖的小戰士，身上每根刺都是一個不屈的故事。</div>
+  </div>
+</div>
+
+<div class="spec-panel">
+  <h2>🟢 精良 設計規格</h2>
+  <ul>
+    <li><span class="color-dot" style="background:#1A1D1A"></span><strong>底色</strong>：#1A1D1A 微偏綠深灰</li>
+    <li><span class="color-dot" style="background:#22C55E"></span><strong>邊框</strong>：#22C55E 1.5dp 翠綠</li>
+    <li><strong>圓角</strong>：12dp</li>
+    <li><strong>呼吸光暈</strong>：opacity 0.04↔0.12, 3 秒循環</li>
+    <li><strong>照片濾鏡</strong>：微暖色調 brightness 1.03 saturation 1.03</li>
+    <li><strong>卡名</strong>：Noto Sans TC Medium 16dp #D4D4D8</li>
+    <li><strong>描述</strong>：10dp #52525B（兩行 clamp）</li>
+    <li><strong>數值</strong>：ATK/DEF 統一灰色 #A1A1AA（同凡品）</li>
+    <li><strong>技能</strong>：#1A2E1A 底 + #22C55E15 邊框</li>
+    <li><strong>角標</strong>：綠色小圓點 8dp</li>
+    <li><strong>光效面積</strong>：0%（只有邊框顏色 + 呼吸光暈）</li>
+    <li><strong>動畫</strong>：邊框呼吸脈動 3s</li>
+    <li><strong>ATK+DEF 範圍</strong>：40~55</li>
+    <li><strong>vs 凡品差異</strong>：綠色邊框 + 呼吸光暈 + 微偏綠底色</li>
+    <li><strong>感覺</strong>：電子設備待機燈 —「咦，有點不一樣」</li>
+  </ul>
+</div>
+
+</body>
+</html>
