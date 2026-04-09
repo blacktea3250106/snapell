@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snapell v5 — 🟣 史詩：全息閃卡</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Noto+Sans+TC:wght@400;500;600;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #0A0B10;
+    font-family: 'Noto Sans TC', sans-serif;
+    gap: 28px; padding: 40px 20px;
+    overflow-x: hidden;
+  }
+  h1 { font-size: 16px; color: #A855F7; font-weight: 400; letter-spacing: 3px; }
+  h1 span { font-weight: 700; color: #C4B5FD; }
+  .subtitle { font-size: 11px; color: #52525B; letter-spacing: 1px; margin-top: -12px; }
+  .anim-note {
+    font-size: 10px; color: #A78BFA; text-align: center;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  /* === CARD OUTER === */
+  .card-outer { position: relative; width: 310px; height: 420px; }
+
+  /* 彩虹外光暈 */
+  .card-outer::before {
+    content: '';
+    position: absolute; inset: -12px;
+    border-radius: 22px;
+    background: conic-gradient(from var(--glow-angle, 0deg),
+      rgba(168,85,247,0.5), rgba(236,72,153,0.4),
+      rgba(56,189,248,0.4), rgba(168,85,247,0.3),
+      rgba(251,191,36,0.3), rgba(168,85,247,0.5)
+    );
+    filter: blur(20px); opacity: 0.5;
+    animation: rotateGlow 4s linear infinite;
+  }
+  @keyframes rotateGlow { to { --glow-angle: 360deg; } }
+  @property --glow-angle {
+    syntax: '<angle>'; initial-value: 0deg; inherits: false;
+  }
+
+  /* === CARD === */
+  .card {
+    position: relative;
+    width: 300px; height: 400px;
+    background: #12131A;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    z-index: 1;
+    box-shadow:
+      0 0 30px rgba(168,85,247,0.3),
+      0 0 60px rgba(168,85,247,0.1),
+      inset 0 0 40px rgba(168,85,247,0.05);
+  }
+
+  /* SweepGradient 彩虹邊框 */
+  .card::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 10px;
+    padding: 2px;
+    background: conic-gradient(from var(--glow-angle, 0deg),
+      #A855F7, #EC4899, #38BDF8, #34D399, #FBBF24, #A855F7
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 10; pointer-events: none;
+    animation: rotateGlow 4s linear infinite;
+  }
+
+  /* 噪點 */
+  .card::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 10px;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    z-index: 1; pointer-events: none; opacity: 0.5;
+  }
+
+  /* 全卡全息覆蓋 */
+  .holo-overlay {
+    position: absolute; inset: 0;
+    z-index: 6; pointer-events: none;
+    border-radius: 10px;
+    background: linear-gradient(var(--holo-angle, 135deg),
+      rgba(168,85,247,0.04) 0%, rgba(236,72,153,0.03) 25%,
+      rgba(56,189,248,0.04) 50%, rgba(168,85,247,0.03) 75%,
+      rgba(251,191,36,0.02) 100%
+    );
+    animation: holoShift 3s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+  }
+  @keyframes holoShift {
+    0% { --holo-angle: 115deg; opacity: 0.6; }
+    100% { --holo-angle: 155deg; opacity: 1; }
+  }
+  @property --holo-angle {
+    syntax: '<angle>'; initial-value: 135deg; inherits: false;
+  }
+
+  /* === PHOTO === */
+  .photo-area {
+    width: 270px; height: 200px;
+    margin: 15px auto 0;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative; z-index: 2;
+  }
+  .photo-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #2D1B4E 0%, #4C1D95 40%, #7C3AED 80%, #A78BFA 100%);
+    display: flex; align-items: center; justify-content: center;
+    filter: brightness(1.05) contrast(1.2) saturate(1.15);
+  }
+  .photo-area::after {
+    content: '';
+    position: absolute; inset: 0;
+    box-shadow: inset 0 0 30px rgba(168,85,247,0.25);
+    border-radius: 6px; z-index: 3; pointer-events: none;
+  }
+  .photo-area::before {
+    content: '';
+    position: absolute; inset: 0;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.3);
+    border-radius: 6px; z-index: 2; pointer-events: none;
+  }
+
+  /* 照片全息 */
+  .photo-holo {
+    position: absolute; inset: 0;
+    z-index: 4; pointer-events: none;
+    background: linear-gradient(var(--holo-angle, 135deg),
+      rgba(168,85,247,0.12) 0%, rgba(236,72,153,0.08) 20%,
+      rgba(56,189,248,0.12) 40%, rgba(52,211,153,0.08) 60%,
+      rgba(251,191,36,0.10) 80%, rgba(168,85,247,0.08) 100%
+    );
+    animation: holoShift 3s ease-in-out infinite alternate;
+    mix-blend-mode: screen; border-radius: 6px;
+  }
+
+  /* sweep 光束 */
+  .sweep-beam {
+    position: absolute; top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg,
+      transparent, rgba(168,85,247,0.15),
+      rgba(236,72,153,0.12), rgba(56,189,248,0.15), transparent
+    );
+    z-index: 5; pointer-events: none;
+    animation: sweepMove 2.5s ease-in-out infinite;
+    filter: blur(6px); border-radius: 6px;
+  }
+  @keyframes sweepMove {
+    0% { transform: translateX(-150%) skewX(-15deg); opacity: 0; }
+    30% { opacity: 1; } 70% { opacity: 1; }
+    100% { transform: translateX(350%) skewX(-15deg); opacity: 0; }
+  }
+
+  /* 追蹤光點 */
+  .track-dot {
+    position: absolute;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    z-index: 12; pointer-events: none;
+  }
+  .track-dot:nth-child(1) { background: #A855F7; box-shadow: 0 0 8px #A855F7, 0 0 16px #A855F780; animation: trackOrbit 6s linear infinite; }
+  .track-dot:nth-child(2) { background: #EC4899; box-shadow: 0 0 8px #EC4899, 0 0 16px #EC489980; animation: trackOrbit 6s linear infinite -1.5s; }
+  .track-dot:nth-child(3) { background: #38BDF8; box-shadow: 0 0 8px #38BDF8, 0 0 16px #38BDF880; animation: trackOrbit 6s linear infinite -3s; }
+  .track-dot:nth-child(4) { background: #FBBF24; box-shadow: 0 0 8px #FBBF24, 0 0 16px #FBBF2480; animation: trackOrbit 6s linear infinite -4.5s; }
+  @keyframes trackOrbit {
+    0%   { top: 0; left: 0; }
+    25%  { top: 0; left: 296px; }
+    50%  { top: 396px; left: 296px; }
+    75%  { top: 396px; left: 0; }
+    100% { top: 0; left: 0; }
+  }
+
+  /* === BADGES === */
+  .rarity-badge { position: absolute; top: 8px; left: 8px; z-index: 6; }
+  .rarity-circle {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: conic-gradient(from var(--glow-angle, 0deg), #A855F7, #EC4899, #38BDF8, #A855F7);
+    display: flex; align-items: center; justify-content: center;
+    animation: rotateGlow 4s linear infinite;
+    box-shadow: 0 0 8px rgba(168,85,247,0.6);
+  }
+  .rarity-circle span {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700; font-size: 9px; color: #12131A;
+  }
+
+  /* === INFO === */
+  .info-area {
+    flex: 1;
+    padding: 8px 15px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+    z-index: 2;
+  }
+  .divider {
+    height: 1.5px; margin: 2px 0;
+    background: linear-gradient(90deg, transparent, #A855F740, #EC489940, #38BDF840, transparent);
+    animation: dividerPulse 3s ease-in-out infinite;
+  }
+  @keyframes dividerPulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  /* 卡名彩虹 */
+  .card-name {
+    font-size: 18px; font-weight: 700;
+    background: linear-gradient(90deg, #C4B5FD, #F9A8D4, #67E8F9, #C4B5FD);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmerText 3s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(168,85,247,0.4));
+  }
+  @keyframes shimmerText { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+
+  .stats-row {
+    display: flex; gap: 32px;
+    align-items: center; padding: 2px 0;
+  }
+  .stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .stat-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 8px;
+    text-transform: uppercase; letter-spacing: 2px; color: #6B7280;
+  }
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 20px; line-height: 1;
+  }
+  .stat-atk .stat-value { color: #F87171; text-shadow: 0 0 8px rgba(248,113,113,0.4); }
+  .stat-def .stat-value { color: #60A5FA; text-shadow: 0 0 8px rgba(96,165,250,0.4); }
+
+  .skill-box {
+    background: rgba(168,85,247,0.06);
+    border: 1px solid rgba(168,85,247,0.2);
+    border-radius: 6px; padding: 5px 8px;
+    position: relative; overflow: hidden;
+  }
+  .skill-box::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(168,85,247,0.12), transparent);
+    animation: skillSweep 3s ease-in-out infinite;
+  }
+  @keyframes skillSweep { 0%,100% { transform: translateX(-100%); } 50% { transform: translateX(100%); } }
+  .skill-name { font-size: 14px; font-weight: 700; color: #C4B5FD; position: relative; }
+  .skill-desc { font-size: 11px; color: #A78BFA; margin-top: 2px; position: relative; }
+
+  .card-desc {
+    font-size: 10px; color: rgba(124,58,237,0.25); line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* === SPEC === */
+  .spec-panel {
+    width: 320px; background: #16171E;
+    border-radius: 10px; padding: 16px;
+    border: 1px solid #2A2B35;
+  }
+  .spec-panel h2 { font-size: 14px; color: #C4B5FD; margin-bottom: 10px; letter-spacing: 1px; }
+  .spec-panel ul { font-size: 11px; color: #9CA3AF; list-style: none; padding: 0; }
+  .spec-panel li { padding: 4px 0; border-bottom: 1px solid #1F2028; }
+  .spec-panel li:last-child { border: none; }
+  .spec-panel li strong { color: #C4B5FD; }
+  .color-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; vertical-align: middle; margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🟣 <span>史詩</span> — 全息閃卡</h1>
+<p class="subtitle">v5「暗匣浮光」Dark Frame + Rising Light</p>
+<div class="anim-note">彩虹 SweepGradient 4s 旋轉 + 照片全息 + 追蹤光點 + sweep 光束</div>
+
+<div class="card-outer">
+  <div class="track-dot"></div>
+  <div class="track-dot"></div>
+  <div class="track-dot"></div>
+  <div class="track-dot"></div>
+
+  <div class="card">
+    <div class="holo-overlay"></div>
+
+    <div class="photo-area">
+      <div class="photo-placeholder">
+        <div style="text-align:center;position:relative;z-index:5">
+          <div style="font-size:48px;margin-bottom:4px">🐺</div>
+          <div style="font-size:11px;color:#E2E4EA">玩家的照片</div>
+          <div style="font-size:9px;color:#A78BFA;margin-top:2px">彩虹全息覆蓋 + 暗角</div>
+        </div>
+      </div>
+      <div class="photo-holo"></div>
+      <div class="sweep-beam"></div>
+      <div class="rarity-badge">
+        <div class="rarity-circle"><span>E</span></div>
+      </div>
+    </div>
+
+    <div class="info-area">
+      <div class="divider"></div>
+      <div class="card-name">暗影魔狼</div>
+
+      <div class="stats-row">
+        <div class="stat stat-atk">
+          <span class="stat-label">ATK</span>
+          <span class="stat-value">42</span>
+        </div>
+        <div class="stat stat-def">
+          <span class="stat-label">DEF</span>
+          <span class="stat-value">36</span>
+        </div>
+      </div>
+
+      <div class="skill-box">
+        <div class="skill-name">🌀 虛空裂隙</div>
+        <div class="skill-desc">被攻擊時有 20% 機率反彈 50% 傷害</div>
+      </div>
+
+      <div class="card-desc">月光下的孤影獵手，暗夜中唯一能讓萬獸噤聲的存在。</div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-panel">
+  <h2>🟣 史詩 設計規格</h2>
+  <ul>
+    <li><span class="color-dot" style="background:#12131A"></span><strong>底色</strong>：#12131A 深藍黑</li>
+    <li><span class="color-dot" style="background:#A855F7"></span><strong>邊框</strong>：2dp 彩虹 SweepGradient 4s 旋轉</li>
+    <li><strong>追蹤光點</strong>：4 個彩色光點沿邊框 6s 一圈</li>
+    <li><strong>照片全息</strong>：彩虹覆蓋 opacity 0.08~0.12 + sweep 光束</li>
+    <li><strong>陀螺儀互動</strong>：轉手機 → 彩虹光移動 + 微傾斜 ±3°</li>
+    <li><strong>卡名</strong>：Bold 18dp 彩虹漸層 + shimmer 3s</li>
+    <li><strong>描述</strong>：10dp rgba(124,58,237,0.25)（兩行 clamp）</li>
+    <li><strong>數值</strong>：ATK 紅 #F87171 / DEF 藍 #60A5FA + glow</li>
+    <li><strong>技能框</strong>：紫色底 + sweep 動畫光帶掃過</li>
+    <li><strong>角標</strong>：彩虹旋轉圓形 22dp + glow</li>
+    <li><strong>光效面積</strong>：~40%</li>
+    <li><strong>ATK+DEF 範圍</strong>：67~84</li>
+    <li><strong>感覺</strong>：「哇靠在發光！」— 第一個想拿出手機錄影的</li>
+  </ul>
+</div>
+
+</body>
+</html>
