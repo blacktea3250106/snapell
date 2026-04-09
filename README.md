@@ -1,0 +1,1 @@
+# Snapell - Card Game
