@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoxCards — 🟢 精良：微光白卡</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Noto+Sans+TC:wght@400;500;700;900&family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #F0F0F0;
+    font-family: 'Noto Sans TC', sans-serif;
+    gap: 24px; padding: 40px 20px;
+  }
+  h1 { font-size: 18px; color: #22C55E; font-weight: 400; letter-spacing: 2px; }
+  h1 span { font-weight: 700; color: #16A34A; }
+
+  .card-outer {
+    position: relative;
+    width: 304px; height: 404px;
+  }
+  /* 極微弱綠色外光 */
+  .card-outer::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 14px;
+    background: #22C55E;
+    filter: blur(4px);
+    opacity: 0.10;
+  }
+
+  .card {
+    position: relative;
+    width: 300px; height: 400px;
+    background: #FAFAFA;
+    border: 1.5px solid #22C55E;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    z-index: 1;
+  }
+
+  /* 照片區 */
+  .photo-area {
+    width: 270px; height: 240px;
+    margin: 15px auto 0;
+    border-radius: 6dp;
+    overflow: hidden;
+    position: relative;
+  }
+  .photo-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #F0FDF4 25%, #DCFCE7 50%, #F0FDF4 75%);
+    display: flex; align-items: center; justify-content: center;
+    filter: brightness(1.05) saturate(1.05);
+  }
+
+  /* 綠色圓點角標 */
+  .rarity-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    z-index: 2;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #22C55E;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .rarity-badge span {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; font-size: 8px;
+    color: white;
+  }
+
+  /* 等級徽章 */
+  .level-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(240,253,244,0.9);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 2;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .level-badge .lv {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 10px;
+    color: #166534; line-height: 1;
+  }
+  .level-badge .dots {
+    display: flex; gap: 2px; margin-top: 1px;
+  }
+  .level-badge .dots span {
+    width: 3px; height: 3px; border-radius: 50%;
+    background: #4ADE80;
+  }
+
+  /* 資訊區 */
+  .info-area {
+    flex: 1;
+    padding: 6px 15px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+
+  /* 分隔線 — 綠色淡實線 */
+  .divider {
+    height: 1.5px;
+    background: rgba(34,197,94,0.4);
+    margin: 2px 0;
+    border-radius: 1px;
+  }
+
+  .card-name {
+    font-size: 16px; font-weight: 500;
+    color: #1F2937;
+  }
+
+  .stats-row {
+    display: flex; justify-content: space-around;
+    height: 24px; align-items: center;
+  }
+  .stat { display: flex; align-items: center; gap: 4px; }
+  .stat-icon { font-size: 13px; }
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700; font-size: 18px;
+    color: #6B7280;
+  }
+
+  .skill-box {
+    background: #F0FDF4;
+    border: 1px solid rgba(34,197,94,0.4);
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+  .skill-name { font-size: 11px; font-weight: 700; color: #166534; }
+  .skill-desc { font-size: 9px; color: #6B7280; margin-top: 1px; }
+
+  .footer {
+    display: flex; justify-content: space-between;
+    font-size: 8px; color: #9CA3AF;
+  }
+
+  /* spec */
+  .spec-panel {
+    width: 300px; background: white; border-radius: 8px;
+    padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .spec-panel h2 { font-size: 14px; color: #16A34A; margin-bottom: 8px; }
+  .spec-panel ul { font-size: 11px; color: #6B7280; list-style: none; padding: 0; }
+  .spec-panel li { padding: 3px 0; border-bottom: 1px solid #F3F4F6; }
+  .spec-panel li:last-child { border: none; }
+  .color-dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; vertical-align: middle; margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🟢 <span>精良</span> — 微光白卡</h1>
+
+<div class="card-outer">
+  <div class="card">
+    <div class="photo-area">
+      <div class="photo-placeholder">
+        <div style="text-align:center">
+          <div style="font-size:48px;margin-bottom:4px">🐱</div>
+          <div style="font-size:11px;color:#6B7280">玩家的照片</div>
+          <div style="font-size:9px;color:#9CA3AF;margin-top:2px">微暖色調・極輕銳化</div>
+        </div>
+      </div>
+      <div class="rarity-badge"><span>U</span></div>
+      <div class="level-badge">
+        <span class="lv">Lv.22</span>
+        <div class="dots"><span></span><span></span></div>
+      </div>
+    </div>
+
+    <div class="info-area">
+      <div class="divider"></div>
+
+      <div class="card-name">🐱 午後慵懶貓</div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-icon">⚔️</span>
+          <span class="stat-value">28</span>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">🛡️</span>
+          <span class="stat-value">35</span>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">⚡</span>
+          <span class="stat-value">22</span>
+        </div>
+      </div>
+
+      <div class="skill-box">
+        <div class="skill-name">😴 午睡回復</div>
+        <div class="skill-desc">每回合結束時，DEF+2（最多疊5層）</div>
+      </div>
+
+      <div class="footer">
+        <span>📍台北  🗣️▶  02.27</span>
+        <span>👤 HaoFu</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-panel">
+  <h2>v4 設計規格 — 統一風格</h2>
+  <ul>
+    <li><span class="color-dot" style="background:#FAFAFA"></span>底色：#FAFAFA 極淡灰白（統一白底）</li>
+    <li><span class="color-dot" style="background:#22C55E"></span>邊框：#22C55E 翠綠 1.5dp</li>
+    <li>圓角：12dp</li>
+    <li>外光：blur(4) + #22C55E 10%（極微弱綠色光暈）</li>
+    <li>角標：綠色圓點 20dp「U」</li>
+    <li>分隔線：1.5dp #22C55E 40% opacity</li>
+    <li>卡名：Noto Sans TC Medium 16dp #1F2937</li>
+    <li>光效面積：0%（只有邊框顏色 + 微光暈）</li>
+    <li>動畫：無</li>
+    <li>vs 凡品差異：<b>綠色邊框</b> + 微光暈 → 一眼辨識</li>
+    <li>感覺：跟凡品 95% 一樣，但邊框是綠的 → 「開始有光了」</li>
+  </ul>
+</div>
+
+</body>
+</html>
