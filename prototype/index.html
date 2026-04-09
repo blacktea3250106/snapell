@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0">
+<title>VoxCards — 萬物圖鑑</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ── 明亮主題：白色圖鑑 ── */
+  --bg-page:     #FAFAFA;
+  --bg-card:     #FFFFFF;
+  --bg-input:    #F3F4F6;
+  --bg-subtle:   #F0F1F3;
+
+  /* ── 暗色場景（煉成 / 翻卡 — 「劇場時刻」） ── */
+  --bg-theater:  #05060A;
+  --bg-theater-panel: rgba(15, 18, 28, 0.85);
+
+  /* ── 文字 ── */
+  --text-primary:   #1A1A2E;
+  --text-secondary: #6B7280;
+  --text-tertiary:  #9CA3AF;
+  --text-inverse:   #F0EDED;
+
+  /* ── 品牌色 ── */
+  --brand:       #1A1A2E;
+  --brand-light: #4A4A6A;
+
+  /* ── 功能色 ── */
+  --accent:      #6366F1;
+  --gold:        #D4AF37;
+  --gold-bright: #F0C854;
+  --red:         #E84040;
+  --blue:        #4A9ED6;
+  --green:       #4CAF7A;
+
+  /* ── 稀有度（冷→暖，業界標準） ── */
+  --r-common:     #9CA3AF;
+  --r-uncommon:   #4CAF7A;
+  --r-rare:       #4A9ED6;
+  --r-epic:       #9B59B6;
+  --r-legendary:  #F0A030;
+  --r-mythic:     #E84040;
+
+  /* ── 邊框與陰影 ── */
+  --border:       rgba(0,0,0,0.06);
+  --border-light: rgba(0,0,0,0.04);
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md:    0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg:    0 8px 30px rgba(0,0,0,0.12);
+  --shadow-card:  0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+}
+
+body {
+  background: #E8E8EC;
+  color: var(--text-primary);
+  font-family: 'Noto Sans TC', 'Inter', -apple-system, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 24px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* ── Phone Frame ── */
+.phone {
+  width: 390px; height: 844px;
+  border-radius: 44px;
+  overflow: hidden; position: relative; flex-shrink: 0;
+  border: 2.5px solid #D1D5DB;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+}
+.phone.light { background: var(--bg-page); }
+.phone.dark  { background: var(--bg-theater); }
+
+.phone .screen { width: 100%; height: 100%; position: relative; overflow: hidden; }
+.screen-label {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 3px; text-transform: uppercase; z-index: 10;
+}
+.phone.light .screen-label { color: var(--text-tertiary); }
+.phone.dark .screen-label  { color: rgba(255,255,255,0.2); }
+
+.safe-area { padding: 52px 0 36px; height: 100%; display: flex; flex-direction: column; }
+
+/* ══════════════════════════════════════
+   COMPONENT: 稀有度寶石標籤
+   ══════════════════════════════════════ */
+.rarity-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 4px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+.rarity-tag .gem {
+  width: 6px; height: 8px;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+.rarity-tag.common    { color: var(--r-common);    background: rgba(156,163,175,0.1); }
+.rarity-tag.common .gem    { background: var(--r-common); }
+.rarity-tag.uncommon  { color: var(--r-uncommon);  background: rgba(76,175,122,0.08); }
+.rarity-tag.uncommon .gem  { background: var(--r-uncommon); }
+.rarity-tag.rare      { color: var(--r-rare);      background: rgba(74,158,214,0.08); }
+.rarity-tag.rare .gem      { background: var(--r-rare); }
+.rarity-tag.epic      { color: var(--r-epic);      background: rgba(155,89,182,0.08); }
+.rarity-tag.epic .gem      { background: var(--r-epic); }
+.rarity-tag.legendary { color: var(--r-legendary); background: rgba(240,160,48,0.1); }
+.rarity-tag.legendary .gem { background: var(--r-legendary); }
+.rarity-tag.mythic    { color: var(--r-mythic);    background: rgba(232,64,64,0.1); }
+.rarity-tag.mythic .gem    { background: var(--r-mythic); }
+
+/* ══════════════════════════════════════
+   COMPONENT: 按鈕
+   ══════════════════════════════════════ */
+.btn {
+  padding: 14px 24px; border-radius: 14px; border: none; cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 15px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform 0.1s, box-shadow 0.15s;
+  width: 100%;
+}
+.btn:active { transform: scale(0.97); }
+
+/* 主要：深色實心（品牌色） */
+.btn.primary {
+  background: var(--brand);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+/* 次要：淺色 */
+.btn.secondary {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+/* 幽靈 */
+.btn.ghost {
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid var(--border);
+  padding: 10px 16px; font-size: 13px; font-weight: 500;
+}
+/* 金色（劇場模式用） */
+.btn.gold-dark {
+  background: linear-gradient(135deg, #B8942A, #D4AF37, #F0C854, #D4AF37);
+  color: #0A0A0F;
+  box-shadow: 0 0 20px rgba(212,175,55,0.3), var(--shadow-md);
+  position: relative; overflow: hidden;
+}
+.btn.gold-dark::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+  animation: shine-sweep 3s ease-in-out infinite;
+}
+@keyframes shine-sweep {
+  0%, 100% { transform: translateX(-120%); }
+  50% { transform: translateX(120%); }
+}
+/* 玻璃（劇場模式用） */
+.btn.glass-dark {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-inverse);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+}
+
+/* ══════════════════════════════════════
+   COMPONENT: 步驟指示器
+   ══════════════════════════════════════ */
+.steps {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; padding: 0 50px; margin-bottom: 16px;
+}
+.steps .dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 700;
+  transition: all 0.3s;
+}
+.steps .line { width: 32px; height: 1.5px; }
+
+/* 明亮模式步驟 */
+.steps.light .dot      { border: 1.5px solid #D1D5DB; color: var(--text-tertiary); background: var(--bg-page); }
+.steps.light .dot.done { border-color: var(--green); color: var(--green); background: rgba(76,175,122,0.06); }
+.steps.light .dot.now  { border-color: var(--brand); color: var(--brand); background: rgba(26,26,46,0.04); box-shadow: 0 0 0 3px rgba(26,26,46,0.06); }
+.steps.light .line     { background: #E5E7EB; }
+.steps.light .line.done { background: var(--green); }
+.steps.light .line.active { background: linear-gradient(90deg, var(--green), var(--brand)); }
+
+/* 暗色模式步驟 */
+.steps.dark .dot      { border: 1.5px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.25); background: transparent; }
+.steps.dark .dot.done { border-color: var(--green); color: var(--green); }
+.steps.dark .dot.now  { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 8px rgba(212,175,55,0.15); }
+.steps.dark .line     { background: rgba(255,255,255,0.08); }
+.steps.dark .line.done { background: var(--green); }
+.steps.dark .line.active { background: linear-gradient(90deg, var(--green), var(--gold)); }
+
+/* ══════════════════════════════════════
+   COMPONENT: 屬性條
+   ══════════════════════════════════════ */
+.stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.stat-badge {
+  width: 26px; height: 26px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 800;
+}
+.stat-name {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--text-tertiary); width: 28px;
+}
+.stat-track { flex: 1; height: 5px; border-radius: 3px; background: var(--bg-input); overflow: hidden; }
+.stat-fill  { height: 100%; border-radius: 3px; }
+.stat-num   { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; width: 28px; text-align: right; }
+
+/* ══════════════════════════════════════
+   SCREEN 1: HOME — 明亮圖鑑
+   ══════════════════════════════════════ */
+.home .topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 44px;
+}
+.home .logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px; font-weight: 800; letter-spacing: 4px;
+  color: var(--brand);
+}
+.home .topbar-icons { display: flex; gap: 6px; }
+.home .t-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; background: var(--bg-card);
+  border: 1px solid var(--border); cursor: pointer;
+}
+
+/* 收藏概覽 */
+.home .overview {
+  padding: 12px 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.home .overview .ov-num {
+  font-family: 'Rajdhani', sans-serif; font-size: 36px; font-weight: 700;
+  color: var(--brand); line-height: 1;
+}
+.home .overview .ov-label {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.3;
+}
+
+/* 區段標題 */
+.home .section-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 20px;
+}
+.home .section-head .sh-bar {
+  width: 3px; height: 14px; border-radius: 2px; background: var(--brand);
+}
+.home .section-head .sh-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700;
+  color: var(--text-primary); letter-spacing: 0.5px;
+}
+.home .section-head .sh-count {
+  margin-left: auto; font-size: 12px; color: var(--text-tertiary);
+}
+
+/* 卡牌滾動區 */
+.home .card-rail {
+  display: flex; gap: 12px; padding: 10px 20px;
+  overflow-x: auto; scrollbar-width: none; flex: 1; align-items: flex-start;
+}
+.home .card-rail::-webkit-scrollbar { display: none; }
+
+/* 迷你卡牌 */
+.home .mini-card {
+  flex-shrink: 0; width: 142px;
+  border-radius: 14px; cursor: pointer;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+.home .mini-card:hover { transform: translateY(-4px); }
+
+.home .mini-card .mc-photo {
+  width: 100%; height: 110px; position: relative; overflow: hidden;
+  background: var(--bg-subtle);
+}
+.home .mini-card .mc-photo .mc-emoji {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+  background: linear-gradient(135deg, #f8f8fa, #ececf0);
+}
+.home .mini-card .mc-photo .mc-lv {
+  position: absolute; top: 6px; left: 6px;
+  padding: 1px 6px; border-radius: 4px;
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+/* 稀有度底部色帶 */
+.home .mini-card .mc-photo .mc-rarity-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+}
+
+.home .mini-card .mc-info { padding: 8px 10px 10px; }
+.home .mini-card .mc-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--text-primary); line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.home .mini-card .mc-meta { margin-top: 4px; }
+.home .mini-card .mc-stats {
+  display: flex; gap: 6px; margin-top: 5px;
+}
+.home .mini-card .mc-stat {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
+  padding: 1px 5px; border-radius: 3px; background: var(--bg-input);
+}
+
+/* 召喚按鈕 */
+.home .summon-section { padding: 0 20px 8px; }
+
+/* ══════════════════════════════════════
+   SCREEN 2: CAMERA — 明亮拍照
+   ══════════════════════════════════════ */
+.camera .cam-title {
+  text-align: center; padding: 0 24px;
+}
+.camera .cam-title .ct-step {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700;
+  color: var(--accent); letter-spacing: 3px;
+}
+.camera .cam-title .ct-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700;
+  color: var(--text-primary); margin-top: 2px;
+}
+.camera .cam-title .ct-desc {
+  font-size: 13px; color: var(--text-secondary); margin-top: 2px;
+}
+
+/* 取景區 */
+.camera .viewfinder {
+  flex: 1; margin: 12px 20px;
+  border-radius: 20px; overflow: hidden;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+/* 對焦角標 */
+.camera .focus-corner {
+  position: absolute; width: 20px; height: 20px;
+  border-style: solid; border-width: 0;
+}
+.camera .focus-corner.tl { top: 16px; left: 16px; border-top-width: 2px; border-left-width: 2px; border-color: var(--brand); border-radius: 3px 0 0 0; }
+.camera .focus-corner.tr { top: 16px; right: 16px; border-top-width: 2px; border-right-width: 2px; border-color: var(--brand); border-radius: 0 3px 0 0; }
+.camera .focus-corner.bl { bottom: 16px; left: 16px; border-bottom-width: 2px; border-left-width: 2px; border-color: var(--brand); border-radius: 0 0 0 3px; }
+.camera .focus-corner.br { bottom: 16px; right: 16px; border-bottom-width: 2px; border-right-width: 2px; border-color: var(--brand); border-radius: 0 0 3px 0; }
+
+.camera .viewfinder .vf-center {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--text-tertiary);
+}
+.camera .viewfinder .vf-center .vf-icon { font-size: 40px; opacity: 0.25; }
+.camera .viewfinder .vf-center .vf-text { font-size: 12px; }
+
+/* 快門 */
+.camera .shutter-area {
+  display: flex; flex-direction: column; align-items: center; padding: 16px 0 8px; gap: 8px;
+}
+.camera .shutter-btn {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: var(--brand); border: 4px solid var(--bg-page);
+  box-shadow: 0 0 0 2px var(--brand), var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: transform 0.1s;
+}
+.camera .shutter-btn:active { transform: scale(0.92); }
+.camera .shutter-btn .sb-inner {
+  width: 54px; height: 54px; border-radius: 50%;
+  background: var(--brand);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; color: white;
+}
+.camera .shutter-hint { font-size: 12px; color: var(--text-tertiary); }
+
+/* ══════════════════════════════════════
+   SCREEN 3: SPELL — 明亮咒語輸入
+   ══════════════════════════════════════ */
+.spell .sp-title {
+  text-align: center; padding: 0 24px;
+}
+.spell .sp-title .spt-step {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700;
+  color: var(--accent); letter-spacing: 3px;
+}
+.spell .sp-title .spt-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700;
+  color: var(--text-primary); margin-top: 2px;
+}
+.spell .sp-title .spt-desc {
+  font-size: 13px; color: var(--text-secondary); margin-top: 2px;
+}
+
+/* 語音錄音區 */
+.spell .voice-area {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+}
+.spell .mic-orb {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+  position: relative;
+}
+.spell .mic-orb:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+/* 外環裝飾 */
+.spell .mic-orb::before {
+  content: ''; position: absolute; inset: -8px;
+  border: 1.5px dashed rgba(0,0,0,0.08);
+  border-radius: 50%;
+  animation: slow-spin 20s linear infinite;
+}
+@keyframes slow-spin { to { transform: rotate(360deg); } }
+
+.spell .voice-hint { font-size: 12px; color: var(--text-tertiary); }
+
+/* 文字輸入 */
+.spell .text-area { padding: 0 20px; width: 100%; }
+.spell .text-area .sp-input {
+  width: 100%; padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1.5px solid #E5E7EB;
+  border-radius: 12px;
+  font-size: 15px; font-family: 'Noto Sans TC', sans-serif;
+  color: var(--text-primary);
+  outline: none;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.spell .text-area .sp-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+}
+.spell .text-area .sp-input::placeholder { color: #C4C8D0; }
+
+/* 稀有度選擇器 */
+.spell .rarity-picker {
+  padding: 0 20px; width: 100%;
+}
+.spell .rarity-picker .rp-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: var(--shadow-sm);
+}
+.spell .rarity-picker .rp-label {
+  font-size: 11px; color: var(--text-tertiary);
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 4px;
+}
+.spell .rp-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.spell .rp-chip {
+  padding: 4px 10px; border-radius: 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 600;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1.5px solid transparent;
+  cursor: pointer; transition: all 0.15s;
+}
+.spell .rp-chip.on { background: var(--bg-page); }
+
+/* 模式切換 */
+.spell .mode-sw {
+  font-size: 12px; color: var(--text-tertiary);
+  cursor: pointer; padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+}
+
+/* ══════════════════════════════════════
+   SCREEN 4: ALCHEMY — 黑暗劇場模式
+   ══════════════════════════════════════ */
+.alchemy .alch-stage {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+/* 符文環 */
+.alchemy .rune-set {
+  width: 180px; height: 180px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.alchemy .rune-set .rn {
+  position: absolute; border-radius: 50%;
+  border-style: solid;
+}
+.alchemy .rune-set .rn-1 {
+  inset: 0; border-width: 1px;
+  border-color: rgba(212,175,55,0.2);
+  animation: rspin 10s linear infinite;
+}
+.alchemy .rune-set .rn-1::after {
+  content: ''; position: absolute; top: -4px; left: 50%;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
+  opacity: 0.5; transform: translateX(-50%);
+}
+.alchemy .rune-set .rn-2 {
+  inset: 18px; border-width: 1px;
+  border-color: rgba(155,89,182,0.15);
+  border-style: dashed;
+  animation: rspin 14s linear infinite reverse;
+}
+.alchemy .rune-set .rn-3 {
+  inset: 34px; border-width: 1px;
+  border-color: rgba(74,158,214,0.1);
+  animation: rspin 8s linear infinite;
+}
+@keyframes rspin { to { transform: rotate(360deg); } }
+
+/* 核心光球 */
+.alchemy .alch-core {
+  width: 54px; height: 54px; border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(240,200,84,0.9) 0%,
+    rgba(212,175,55,0.5) 40%,
+    rgba(155,89,182,0.2) 70%,
+    transparent 100%);
+  box-shadow: 0 0 40px rgba(212,175,55,0.3), 0 0 80px rgba(212,175,55,0.1);
+  animation: core-pulse 2s ease-in-out infinite;
+}
+@keyframes core-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+/* 狀態文字 */
+.alchemy .alch-text { margin-top: 36px; text-align: center; }
+.alchemy .alch-text .at-main {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--gold); letter-spacing: 3px;
+  animation: txt-fade 1.5s ease-in-out infinite;
+}
+@keyframes txt-fade { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+.alchemy .alch-text .at-sub {
+  font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 6px;
+}
+
+/* 素材指示 */
+.alchemy .ingredients {
+  display: flex; gap: 20px; margin-top: 32px;
+  padding: 12px 18px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.alchemy .ing { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.alchemy .ing .ing-ico {
+  width: 34px; height: 34px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.alchemy .ing .ing-lab {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 1.5px; color: rgba(255,255,255,0.25);
+}
+.alchemy .plus { color: rgba(255,255,255,0.15); font-size: 14px; align-self: center; }
+
+/* 粒子 — 劇場模式用 */
+.theater-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.tp {
+  position: absolute; border-radius: 50%;
+  animation: tp-rise linear infinite;
+}
+@keyframes tp-rise {
+  0%   { transform: translateY(0) translateX(0) scale(0.5); opacity: 0; }
+  10%  { opacity: 0.5; }
+  50%  { transform: translateY(-400px) translateX(10px) scale(1); opacity: 0.25; }
+  100% { transform: translateY(-844px) translateX(-6px) scale(0.3); opacity: 0; }
+}
+
+/* ══════════════════════════════════════
+   SCREEN 5: REVEAL — 黑暗劇場 · 翻卡
+   ══════════════════════════════════════ */
+.reveal .reveal-stage {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 0 24px; position: relative;
+}
+
+/* 聚光燈 */
+.reveal .spotlight {
+  position: absolute; top: -10%; left: 50%; transform: translateX(-50%);
+  width: 280px; height: 450px;
+  background: radial-gradient(ellipse,
+    rgba(240,160,48,0.07) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* 揭示卡 — 明亮白卡在暗色背景上 */
+.reveal .rev-card {
+  width: 220px; border-radius: 14px;
+  background: white;
+  box-shadow:
+    0 0 30px rgba(240,160,48,0.2),
+    0 0 60px rgba(240,160,48,0.06),
+    0 16px 48px rgba(0,0,0,0.5);
+  overflow: hidden; position: relative;
+}
+/* 稀有度頂部光帶 */
+.reveal .rev-card .rc-glow-bar {
+  height: 3px; width: 100%;
+}
+.reveal .rev-card .rc-photo {
+  width: 100%; height: 150px; position: relative;
+  background: linear-gradient(135deg, #f0f0f2, #e8e8ec);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px;
+}
+.reveal .rev-card .rc-photo .rc-fade {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+  background: linear-gradient(transparent, white);
+}
+.reveal .rev-card .rc-body { padding: 10px 14px 14px; }
+.reveal .rev-card .rc-name-row {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.reveal .rev-card .rc-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700;
+}
+.reveal .rev-card .rc-lv {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700;
+}
+.reveal .rev-card .rc-desc {
+  font-size: 11px; color: #6B7280; margin-top: 3px; line-height: 1.5;
+}
+.reveal .rev-card .rc-divider {
+  height: 1px; background: #F0F0F0; margin: 8px 0;
+}
+.reveal .rev-card .rc-stats { display: flex; gap: 8px; }
+.reveal .rev-card .rc-st {
+  display: flex; align-items: center; gap: 3px;
+}
+.reveal .rev-card .rc-st-badge {
+  width: 18px; height: 18px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 8px; font-weight: 800;
+}
+.reveal .rev-card .rc-st-val {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700;
+}
+
+/* Debug */
+.reveal .debug-box {
+  margin-top: 14px; padding: 8px 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);
+}
+.reveal .debug-box .db-label {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600;
+  letter-spacing: 1.5px; color: rgba(255,255,255,0.2);
+}
+.reveal .debug-box .db-text {
+  font-family: 'Rajdhani', sans-serif; font-size: 11px;
+  color: rgba(255,255,255,0.35); margin-top: 2px;
+}
+
+/* 動作按鈕 */
+.reveal .rev-actions {
+  display: flex; gap: 10px; width: 100%; padding: 0 24px; margin-top: 20px;
+}
+.reveal .rev-actions .btn { flex: 1; }
+
+/* ══════════════════════════════════════
+   SCREEN 6: CARD DETAIL — 明亮詳情頁
+   ══════════════════════════════════════ */
+.detail .det-scroll {
+  flex: 1; overflow-y: auto; scrollbar-width: none; padding: 0 20px;
+}
+.detail .det-scroll::-webkit-scrollbar { display: none; }
+
+.detail .back-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 0 8px; cursor: pointer;
+}
+.detail .back-btn span { font-size: 13px; color: var(--text-secondary); }
+
+/* 展示卡 */
+.detail .card-hero {
+  display: flex; justify-content: center; padding: 8px 0; position: relative;
+}
+.detail .card-hero .hero-card {
+  width: 190px; border-radius: 14px;
+  background: var(--bg-card); overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+}
+.detail .card-hero .hc-photo {
+  width: 100%; height: 130px;
+  background: linear-gradient(135deg, #f0f0f2, #e8e8ec);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px; position: relative;
+}
+.detail .card-hero .hc-photo .hc-fade {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 30px;
+  background: linear-gradient(transparent, var(--bg-card));
+}
+.detail .card-hero .hc-info { padding: 8px 12px 10px; }
+.detail .card-hero .hc-title {
+  font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700;
+}
+.detail .card-hero .hc-sub {
+  font-size: 10px; color: var(--text-tertiary); margin-top: 1px;
+}
+
+/* 稀有度徽章居中 */
+.detail .rarity-center {
+  display: flex; justify-content: center; padding: 6px 0 12px;
+}
+
+/* 面板卡 */
+.detail .panel {
+  background: var(--bg-card); border-radius: 14px;
+  padding: 14px 16px; margin-bottom: 10px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border-light);
+}
+.detail .panel .p-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.detail .panel .p-bar { width: 3px; height: 14px; border-radius: 2px; }
+.detail .panel .p-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* 技能 */
+.detail .skill-row { display: flex; gap: 10px; }
+.detail .skill-ico {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; flex-shrink: 0;
+}
+.detail .skill-body { flex: 1; }
+.detail .skill-name {
+  font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700;
+}
+.detail .skill-desc {
+  font-size: 11px; color: var(--text-secondary); margin-top: 2px; line-height: 1.4;
+}
+.detail .skill-tag {
+  display: inline-block; margin-top: 4px;
+  padding: 2px 8px; border-radius: 5px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 600;
+}
+
+/* 分數 */
+.detail .score-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+}
+.detail .score-cell {
+  text-align: center; padding: 8px 4px;
+  background: var(--bg-input); border-radius: 8px;
+}
+.detail .score-cell .scv {
+  font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700;
+}
+.detail .score-cell .scl { font-size: 10px; color: var(--text-tertiary); margin-top: 1px; }
+
+/* 總分 */
+.detail .total-score {
+  text-align: center; margin-top: 8px;
+}
+.detail .total-score .ts-num {
+  font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700;
+}
+.detail .total-score .ts-max { font-size: 12px; color: var(--text-tertiary); }
+
+/* 底部 meta */
+.detail .meta-bar {
+  display: flex; justify-content: space-around;
+  padding: 10px 0; margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.detail .meta-item { text-align: center; }
+.detail .meta-item .mv { font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700; color: var(--text-secondary); }
+.detail .meta-item .ml { font-size: 9px; color: var(--text-tertiary); margin-top: 1px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     SCREEN 1: HOME — 明亮圖鑑
+     白色背景，卡牌自己說話
+     ════════════════════════════════════════════ -->
+<div class="phone light">
+  <div class="screen home">
+    <span class="screen-label">Home</span>
+    <div class="safe-area">
+      <div class="topbar">
+        <span class="logo">VOXCARDS</span>
+        <div class="topbar-icons">
+          <div class="t-icon">🛠</div>
+          <div class="t-icon">📋</div>
+        </div>
+      </div>
+
+      <div class="overview">
+        <span class="ov-num">7</span>
+        <div>
+          <div class="ov-label">張卡牌已收藏</div>
+          <div style="font-size:11px; color:var(--text-tertiary); margin-top:1px;">最近召喚：2 小時前</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div class="sh-bar"></div>
+        <span class="sh-title">我的卡牌</span>
+        <span class="sh-count">7 / ∞</span>
+      </div>
+
+      <div class="card-rail">
+        <!-- Legendary -->
+        <div class="mini-card">
+          <div class="mc-photo">
+            <div class="mc-emoji">👑</div>
+            <span class="mc-lv" style="color:var(--r-legendary);">Lv.82</span>
+            <div class="mc-rarity-bar" style="background:linear-gradient(90deg, var(--r-legendary), #F0C854);"></div>
+          </div>
+          <div class="mc-info">
+            <div class="mc-name">黃金肉球炎貓</div>
+            <div class="mc-meta">
+              <div class="rarity-tag legendary"><div class="gem"></div>LEGENDARY</div>
+            </div>
+            <div class="mc-stats">
+              <span class="mc-stat" style="color:var(--red);">ATK 78</span>
+              <span class="mc-stat" style="color:var(--blue);">DEF 65</span>
+              <span class="mc-stat" style="color:var(--green);">SPD 71</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Epic -->
+        <div class="mini-card">
+          <div class="mc-photo">
+            <div class="mc-emoji">⚡</div>
+            <span class="mc-lv" style="color:var(--r-epic);">Lv.54</span>
+            <div class="mc-rarity-bar" style="background:var(--r-epic);"></div>
+          </div>
+          <div class="mc-info">
+            <div class="mc-name">雷擊柴犬</div>
+            <div class="mc-meta">
+              <div class="rarity-tag epic"><div class="gem"></div>EPIC</div>
+            </div>
+            <div class="mc-stats">
+              <span class="mc-stat" style="color:var(--red);">ATK 62</span>
+              <span class="mc-stat" style="color:var(--blue);">DEF 45</span>
+              <span class="mc-stat" style="color:var(--green);">SPD 58</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rare -->
+        <div class="mini-card">
+          <div class="mc-photo">
+            <div class="mc-emoji">🍜</div>
+            <span class="mc-lv" style="color:var(--r-rare);">Lv.35</span>
+            <div class="mc-rarity-bar" style="background:var(--r-rare);"></div>
+          </div>
+          <div class="mc-info">
+            <div class="mc-name">深夜覺醒拉麵</div>
+            <div class="mc-meta">
+              <div class="rarity-tag rare"><div class="gem"></div>RARE</div>
+            </div>
+            <div class="mc-stats">
+              <span class="mc-stat" style="color:var(--red);">ATK 41</span>
+              <span class="mc-stat" style="color:var(--blue);">DEF 38</span>
+              <span class="mc-stat" style="color:var(--green);">SPD 33</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Uncommon -->
+        <div class="mini-card">
+          <div class="mc-photo">
+            <div class="mc-emoji">🐱</div>
+            <span class="mc-lv" style="color:var(--r-uncommon);">Lv.18</span>
+            <div class="mc-rarity-bar" style="background:var(--r-uncommon);"></div>
+          </div>
+          <div class="mc-info">
+            <div class="mc-name">窗邊午睡貓</div>
+            <div class="mc-meta">
+              <div class="rarity-tag uncommon"><div class="gem"></div>UNCOMMON</div>
+            </div>
+            <div class="mc-stats">
+              <span class="mc-stat" style="color:var(--red);">ATK 22</span>
+              <span class="mc-stat" style="color:var(--blue);">DEF 28</span>
+              <span class="mc-stat" style="color:var(--green);">SPD 19</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Common -->
+        <div class="mini-card">
+          <div class="mc-photo">
+            <div class="mc-emoji">🩴</div>
+            <span class="mc-lv" style="color:var(--r-common);">Lv.5</span>
+            <div class="mc-rarity-bar" style="background:var(--r-common);"></div>
+          </div>
+          <div class="mc-info">
+            <div class="mc-name">路邊藍白拖</div>
+            <div class="mc-meta">
+              <div class="rarity-tag common"><div class="gem"></div>COMMON</div>
+            </div>
+            <div class="mc-stats">
+              <span class="mc-stat" style="color:var(--red);">ATK 8</span>
+              <span class="mc-stat" style="color:var(--blue);">DEF 12</span>
+              <span class="mc-stat" style="color:var(--green);">SPD 6</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summon-section">
+        <button class="btn primary">
+          <span>✦</span>
+          <span>開始召喚</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SCREEN 2: CAMERA — 明亮拍照
+     ════════════════════════════════════════════ -->
+<div class="phone light">
+  <div class="screen camera">
+    <span class="screen-label">Step 1 · Camera</span>
+    <div class="safe-area">
+      <div class="steps light">
+        <div class="dot now">1</div>
+        <div class="line active"></div>
+        <div class="dot">2</div>
+        <div class="line"></div>
+        <div class="dot">3</div>
+        <div class="line"></div>
+        <div class="dot">4</div>
+      </div>
+
+      <div class="cam-title">
+        <div class="ct-step">STEP 1</div>
+        <div class="ct-name">捕捉靈魂</div>
+        <div class="ct-desc">拍攝任何物體，賦予它魔力</div>
+      </div>
+
+      <div class="viewfinder">
+        <div class="focus-corner tl"></div>
+        <div class="focus-corner tr"></div>
+        <div class="focus-corner bl"></div>
+        <div class="focus-corner br"></div>
+        <div class="vf-center">
+          <div class="vf-icon">📷</div>
+          <span class="vf-text">對準目標物</span>
+        </div>
+      </div>
+
+      <div class="shutter-area">
+        <div class="shutter-btn"><div class="sb-inner">📸</div></div>
+        <span class="shutter-hint">按下捕捉靈魂</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SCREEN 3A: SPELL (Voice) — 明亮語音
+     ════════════════════════════════════════════ -->
+<div class="phone light">
+  <div class="screen spell">
+    <span class="screen-label">Step 2 · Voice</span>
+    <div class="safe-area">
+      <div class="steps light">
+        <div class="dot done">✓</div>
+        <div class="line done"></div>
+        <div class="dot now">2</div>
+        <div class="line"></div>
+        <div class="dot">3</div>
+        <div class="line"></div>
+        <div class="dot">4</div>
+      </div>
+
+      <div class="sp-title">
+        <div class="spt-step">STEP 2</div>
+        <div class="spt-name">唸出咒語</div>
+        <div class="spt-desc">長按麥克風，大聲唸出咒語</div>
+      </div>
+
+      <div class="voice-area">
+        <div class="mic-orb">🎤</div>
+        <div class="voice-hint">長按開始錄音</div>
+      </div>
+
+      <div class="rarity-picker">
+        <div class="rp-box">
+          <div class="rp-label">
+            <span>✦</span>
+            <span>稀有度：隨機</span>
+          </div>
+          <div class="rp-chips">
+            <div class="rp-chip on" style="border-color:var(--text-tertiary); color:var(--text-primary);">隨機</div>
+            <div class="rp-chip">普通</div>
+            <div class="rp-chip">非凡</div>
+            <div class="rp-chip">稀有</div>
+            <div class="rp-chip">史詩</div>
+            <div class="rp-chip">傳說</div>
+            <div class="rp-chip">神話</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:10px;"></div>
+      <div style="display:flex; justify-content:center;">
+        <div class="mode-sw">改用文字輸入</div>
+      </div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SCREEN 3B: SPELL (Text) — 明亮文字
+     ════════════════════════════════════════════ -->
+<div class="phone light">
+  <div class="screen spell">
+    <span class="screen-label">Step 2 · Text</span>
+    <div class="safe-area">
+      <div class="steps light">
+        <div class="dot done">✓</div>
+        <div class="line done"></div>
+        <div class="dot now">2</div>
+        <div class="line"></div>
+        <div class="dot">3</div>
+        <div class="line"></div>
+        <div class="dot">4</div>
+      </div>
+
+      <div class="sp-title">
+        <div class="spt-step">STEP 2</div>
+        <div class="spt-name">唸出咒語</div>
+        <div class="spt-desc">輸入你的咒語文字</div>
+      </div>
+
+      <div style="height:20px;"></div>
+
+      <div class="text-area">
+        <input type="text" class="sp-input" placeholder='例如：「燃燒吧！黃金肉球！」' value="燃燒吧！黃金肉球！">
+        <div style="height:16px;"></div>
+        <button class="btn primary" style="width:100%;">
+          <span>⚡</span>
+          <span>發動咒語！</span>
+        </button>
+      </div>
+
+      <div style="flex:1;"></div>
+
+      <div class="rarity-picker">
+        <div class="rp-box">
+          <div class="rp-label">
+            <span style="color:var(--r-epic);">✦</span>
+            <span style="color:var(--r-epic);">稀有度：史詩</span>
+          </div>
+          <div class="rp-chips">
+            <div class="rp-chip">隨機</div>
+            <div class="rp-chip">普通</div>
+            <div class="rp-chip">非凡</div>
+            <div class="rp-chip">稀有</div>
+            <div class="rp-chip on" style="border-color:var(--r-epic); color:var(--r-epic); background:rgba(155,89,182,0.06);">史詩</div>
+            <div class="rp-chip">傳說</div>
+            <div class="rp-chip">神話</div>
+          </div>
+        </div>
+      </div>
+      <div style="height:10px;"></div>
+      <div style="display:flex; justify-content:center;">
+        <div class="mode-sw">切換到語音模式</div>
+      </div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SCREEN 4: ALCHEMY — 黑暗劇場
+     日常明亮 → 煉成時切入全黑「劇場模式」
+     ════════════════════════════════════════════ -->
+<div class="phone dark">
+  <div class="screen alchemy">
+    <span class="screen-label">Step 3 · Alchemy</span>
+    <div class="theater-particles">
+      <div class="tp" style="width:2px;height:2px;background:rgba(212,175,55,0.5);left:20%;top:80%;animation-duration:11s;animation-delay:0s;"></div>
+      <div class="tp" style="width:1.5px;height:1.5px;background:rgba(155,89,182,0.4);left:50%;top:88%;animation-duration:14s;animation-delay:2s;"></div>
+      <div class="tp" style="width:2px;height:2px;background:rgba(74,158,214,0.35);left:75%;top:85%;animation-duration:16s;animation-delay:4s;"></div>
+      <div class="tp" style="width:1.5px;height:1.5px;background:rgba(212,175,55,0.4);left:35%;top:92%;animation-duration:12s;animation-delay:1s;"></div>
+      <div class="tp" style="width:1px;height:1px;background:rgba(240,160,48,0.3);left:65%;top:95%;animation-duration:18s;animation-delay:5s;"></div>
+    </div>
+    <div class="safe-area">
+      <div class="steps dark">
+        <div class="dot done">✓</div>
+        <div class="line done"></div>
+        <div class="dot done">✓</div>
+        <div class="line active"></div>
+        <div class="dot now">3</div>
+        <div class="line"></div>
+        <div class="dot">4</div>
+      </div>
+
+      <div class="alch-stage">
+        <div class="rune-set">
+          <div class="rn rn-1"></div>
+          <div class="rn rn-2"></div>
+          <div class="rn rn-3"></div>
+          <div class="alch-core"></div>
+        </div>
+        <div class="alch-text">
+          <div class="at-main">煉 成 中 ...</div>
+          <div class="at-sub">靈魂與咒語交融，卡牌正在凝聚</div>
+        </div>
+        <div class="ingredients">
+          <div class="ing"><div class="ing-ico">📸</div><span class="ing-lab">PHOTO</span></div>
+          <div class="plus">+</div>
+          <div class="ing"><div class="ing-ico">🎤</div><span class="ing-lab">SPELL</span></div>
+          <div class="plus">+</div>
+          <div class="ing"><div class="ing-ico">🎲</div><span class="ing-lab">FATE</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SCREEN 5: REVEAL — 黑暗劇場 · 白卡揭示
+     黑底上的白色卡牌 = 聚光燈下的收藏品
+     ════════════════════════════════════════════ -->
+<div class="phone dark">
+  <div class="screen reveal">
+    <span class="screen-label">Step 4 · Reveal</span>
+    <div class="theater-particles">
+      <div class="tp" style="width:2.5px;height:2.5px;background:rgba(240,160,48,0.5);left:25%;top:85%;animation-duration:10s;animation-delay:0s;"></div>
+      <div class="tp" style="width:2px;height:2px;background:rgba(240,160,48,0.4);left:55%;top:90%;animation-duration:14s;animation-delay:2s;"></div>
+      <div class="tp" style="width:1.5px;height:1.5px;background:rgba(212,175,55,0.3);left:78%;top:88%;animation-duration:16s;animation-delay:3s;"></div>
+    </div>
+    <div class="safe-area">
+      <div class="steps dark">
+        <div class="dot done">✓</div>
+        <div class="line done"></div>
+        <div class="dot done">✓</div>
+        <div class="line done"></div>
+        <div class="dot done">✓</div>
+        <div class="line done"></div>
+        <div class="dot now">4</div>
+      </div>
+
+      <div class="reveal-stage">
+        <div class="spotlight"></div>
+        <div class="rev-card">
+          <div class="rc-glow-bar" style="background:linear-gradient(90deg, var(--r-legendary), #F0C854);"></div>
+          <div class="rc-photo">👑<div class="rc-fade"></div></div>
+          <div class="rc-body">
+            <div class="rc-name-row">
+              <span class="rc-name" style="color:var(--r-legendary);">黃金肉球炎貓</span>
+              <span class="rc-lv" style="color:var(--r-legendary);">Lv.82</span>
+            </div>
+            <div style="margin-top:4px;">
+              <div class="rarity-tag legendary"><div class="gem"></div>LEGENDARY</div>
+            </div>
+            <div class="rc-desc">傳說中用肉球噴出金色火焰的貓，比看起來危險一百倍。</div>
+            <div class="rc-divider"></div>
+            <div class="rc-stats">
+              <div class="rc-st">
+                <div class="rc-st-badge" style="background:rgba(232,64,64,0.1); color:var(--red);">A</div>
+                <span class="rc-st-val" style="color:var(--red);">78</span>
+              </div>
+              <div class="rc-st">
+                <div class="rc-st-badge" style="background:rgba(74,158,214,0.1); color:var(--blue);">D</div>
+                <span class="rc-st-val" style="color:var(--blue);">65</span>
+              </div>
+              <div class="rc-st">
+                <div class="rc-st-badge" style="background:rgba(76,175,122,0.1); color:var(--green);">S</div>
+                <span class="rc-st-val" style="color:var(--green);">71</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="debug-box">
+          <div class="db-label">DEBUG</div>
+          <div class="db-text">Photo:22 + Spell:24 (R8/E9/C7) + Fate:38 = 84 → Legendary Lv.82</div>
+        </div>
+      </div>
+
+      <div class="rev-actions">
+        <button class="btn glass-dark"><span>🏠</span><span style="font-size:13px;">返回</span></button>
+        <button class="btn gold-dark"><span>✦</span><span>再次召喚</span></button>
+      </div>
+      <div style="height:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SCREEN 6: CARD DETAIL — 明亮詳情頁
+     卡牌圖鑑頁：白底，乾淨資訊呈現
+     ════════════════════════════════════════════ -->
+<div class="phone light">
+  <div class="screen detail">
+    <span class="screen-label">Card Detail</span>
+    <div class="safe-area">
+      <div class="det-scroll">
+        <div class="back-btn">
+          <span style="font-size:16px;">←</span>
+          <span>返回</span>
+        </div>
+
+        <div class="card-hero">
+          <div class="hero-card">
+            <div class="hc-photo">👑<div class="hc-fade"></div></div>
+            <div class="hc-info">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="hc-title" style="color:var(--r-legendary);">黃金肉球炎貓</span>
+                <span style="font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:700; color:var(--r-legendary);">Lv.82</span>
+              </div>
+              <div class="hc-sub">傳說中用肉球噴出金色火焰的貓</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rarity-center">
+          <div class="rarity-tag legendary" style="padding:4px 12px; font-size:11px;">
+            <div class="gem" style="width:8px; height:10px;"></div>
+            LEGENDARY
+          </div>
+        </div>
+
+        <!-- 屬性 -->
+        <div class="panel">
+          <div class="p-head">
+            <div class="p-bar" style="background:var(--red);"></div>
+            <span class="p-label">戰鬥屬性</span>
+          </div>
+          <div class="stat-row">
+            <div class="stat-badge" style="background:rgba(232,64,64,0.08); color:var(--red);">A</div>
+            <span class="stat-name">ATK</span>
+            <div class="stat-track"><div class="stat-fill" style="width:78%; background:linear-gradient(90deg, var(--red), #FF7070);"></div></div>
+            <span class="stat-num" style="color:var(--red);">78</span>
+          </div>
+          <div class="stat-row">
+            <div class="stat-badge" style="background:rgba(74,158,214,0.08); color:var(--blue);">D</div>
+            <span class="stat-name">DEF</span>
+            <div class="stat-track"><div class="stat-fill" style="width:65%; background:linear-gradient(90deg, var(--blue), #70B8E8);"></div></div>
+            <span class="stat-num" style="color:var(--blue);">65</span>
+          </div>
+          <div class="stat-row">
+            <div class="stat-badge" style="background:rgba(76,175,122,0.08); color:var(--green);">S</div>
+            <span class="stat-name">SPD</span>
+            <div class="stat-track"><div class="stat-fill" style="width:71%; background:linear-gradient(90deg, var(--green), #70DB98);"></div></div>
+            <span class="stat-num" style="color:var(--green);">71</span>
+          </div>
+        </div>
+
+        <!-- 技能 -->
+        <div class="panel">
+          <div class="p-head">
+            <div class="p-bar" style="background:var(--r-epic);"></div>
+            <span class="p-label">被動技能</span>
+          </div>
+          <div class="skill-row">
+            <div class="skill-ico" style="background:rgba(155,89,182,0.06); border:1px solid rgba(155,89,182,0.12);">🔥</div>
+            <div class="skill-body">
+              <div class="skill-name" style="color:var(--r-epic);">不屈之焰</div>
+              <div class="skill-desc">上回合輸了的話，本回合所有屬性+8</div>
+              <div class="skill-tag" style="background:rgba(155,89,182,0.06); color:var(--r-epic);">上回合敗北 → 全屬性+8</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分數 -->
+        <div class="panel">
+          <div class="p-head">
+            <div class="p-bar" style="background:var(--gold);"></div>
+            <span class="p-label">煉成分數</span>
+          </div>
+          <div class="score-grid">
+            <div class="score-cell">
+              <div class="scv" style="color:var(--blue);">22</div>
+              <div class="scl">照片靈力</div>
+            </div>
+            <div class="score-cell">
+              <div class="scv" style="color:var(--r-epic);">24</div>
+              <div class="scl">咒語能量</div>
+            </div>
+            <div class="score-cell">
+              <div class="scv" style="color:var(--gold);">38</div>
+              <div class="scl">命運值</div>
+            </div>
+          </div>
+          <div class="total-score">
+            <span class="ts-num" style="color:var(--r-legendary);">84</span>
+            <span class="ts-max"> / 100</span>
+          </div>
+        </div>
+
+        <div class="meta-bar">
+          <div class="meta-item"><div class="mv">2026/02/27</div><div class="ml">召喚日期</div></div>
+          <div class="meta-item"><div class="mv">台北</div><div class="ml">召喚地點</div></div>
+          <div class="meta-item"><div class="mv">#107</div><div class="ml">全服編號</div></div>
+          <div class="meta-item"><div class="mv">#42/200</div><div class="ml">限量編號</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
